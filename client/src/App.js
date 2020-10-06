@@ -2,6 +2,10 @@ import React from 'react';
 import './App.css';
 import ReadString from "./ReadString";
 import SetString from "./SetString";
+import "bootstrap/dist/css/bootstrap.min.css";
+import { Navbar, Nav, Button } from "react-bootstrap";
+import Landing from "./components/Landing";
+import Error from "./components/404";
 
 
 class App extends React.Component {
@@ -12,6 +16,7 @@ class App extends React.Component {
       drizzleState: null
     }
   }
+
   componentDidMount() {
     const { drizzle } = this.props;
     this.unsubscribe = drizzle.store.subscribe(() => {
@@ -28,14 +33,20 @@ class App extends React.Component {
     if (this.state.loading) return "Loading Drizzle...";
     return (
       <div className="App">
-        <ReadString
-          drizzle={this.props.drizzle}
-          drizzleState={this.state.drizzleState}
-        />
-        <SetString
-          drizzle={this.props.drizzle}
-          drizzleState={this.state.drizzleState}
-        />
+        <Navbar bg="dark" variant="dark">
+          <div className="container">
+            <Navbar.Brand href="#home">Liar's Dice</Navbar.Brand>
+            <Nav className="mr-auto">
+            </Nav>
+            <Nav>
+              <Nav.Link href="#rules">Rules</Nav.Link>
+              <Nav.Link href="#play">Play</Nav.Link>
+            </Nav>
+          </div>
+        </Navbar>
+
+        <Error/>
+      
       </div>
     );
   }
