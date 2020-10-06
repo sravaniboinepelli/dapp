@@ -28,6 +28,8 @@ contract LiarsDice {
         uint8 playerPos;
     }
 
+    /// @dev  exists: used to see if player joined the game status will be true till he withdraws any balance owed to him
+    /// @dev  inGame: used to see if player lost all his dice and out of the game
     /// @dev  numDice: number of dice player currently posses
     /// @dev  balance: player account balance in wei
     /// @dev  concealedRollFaces: player's roll face values in current round for each of his dice as hash(before challenged)
@@ -42,27 +44,44 @@ contract LiarsDice {
          uint256 balance; 
          bytes32 [] concealedRollFaces;
          uint256 [] revealedRollFaces;
-        //  bytes32 [numSetDice] concealedRollFaces;
-        //  uint8 [numSetDice] revealedRollFaces;
+    
     }
+    /// @dev All the money from will be tranfered to this account.
+    address payable deployer = msg.sender;
 
-    address deployer = msg.sender;
+    /// @dev app fron end can check this and call functions to other players reveled dice so 
+    /// that they can  be diplayed to player
     bool public revealUpdateReady = false;
+
+    /// @dev number of players that need to be join to start the game
     uint8 numPlayers =2;
+    /// @dev number of players that are still in the game
     uint8 public numActivePlayers;
+    /// @dev current round number
     uint8 public numRound=0;
-    uint8 turnOfPlayer;
+    uint8 public turnOfPlayer;
+    /// @dev the amount each player has to pay to play the game.
     uint256 public gameCost;
+
     uint8 callCount=0;
+
+    /// @dev Front end app shows this by concatenating with string player (instead of address show as player 1, player 2 etc)
     uint8 public winnerPlayerPos;
     bidInfo currentBid;
 
-    /// @dev players list player at pos 0 will strat the first bid 
+    /// @dev players list player at pos 0 will strat the first bid and turns go in clock wise direction.
     address [] playerList;
 
     /// @dev Info associated with players for all players 
     mapping(address => PlayerInfo) players;
+
+    /// @dev Current stage of the game, fron end apps should call appropriate functions based on stage and display 
+    /// relavent info to players like showing other players dice after challenge, Ask users to roll, bid/challenge
+    /// (in addition to getting the turn info)
     Stages public stage;
+
+
+    /// @dev stores the number of dice with that face value, updated after getting unHashed face value from each player
     mapping(uint256 => uint8)rollFaceValues;
 
     event WithDrewMoney(
@@ -80,10 +99,17 @@ contract LiarsDice {
         uint256 _value,
         uint256 _secret
     );
+     event BidInfo(
+        uint256 _bidFaceValue,
+        uint8 _bidNumDice,
+        uint8 _newNumDice,
+        uint256 _newFaceValue
+    );
 
    
     /// @notice Constructor initialize default values
-    // constructor ()   {
+    /// @param noOfPlayers: number of players needed to start the game
+    /// @param cost: amount of wei that each player should pay to play game
     constructor (uint8 noOfPlayers, uint256 cost)   {
         numPlayers = noOfPlayers;
 
@@ -104,6 +130,8 @@ contract LiarsDice {
         return address(this).balance;
     }
 
+    /// @dev Validates if a perticuler function can be called at a given stage of the game
+    /// @dev _stage:  list of stages in which a perticuler function call is allowed
     modifier atStage(Stages [2] memory _stage)
     {
         bool validStage = false;
@@ -121,8 +149,15 @@ contract LiarsDice {
         _;
     }
 
-     /// @dev Function to update turn of the player to do bid/challenge
+    /// @dev After a player bids/challenges determines who would be the next player allowed to bid/challenge.
+    /// PlayerList an array of address is used as a circuler buffer to determine the turn. If a perticuler player
+    /// at a position is eliminated from game then address is set to 0. If we ended up wit same position 
+    /// as original position that means all other players are eliminated and that was marked with a high number 255.
     function updateTurn()  internal returns(uint8) {
+        if( numActivePlayers == 1){
+            turnOfPlayer = 255;
+            return turnOfPlayer;
+        }
         uint8 origTurn = turnOfPlayer;
         turnOfPlayer += 1;
         if(turnOfPlayer >= numPlayers){
@@ -145,7 +180,8 @@ contract LiarsDice {
         
         return turnOfPlayer;
     }
-     /// @dev Function to check if revealed values matches with hashed values sent before
+
+    /// @dev Function to check if revealed face values matches with hashed values sent before
     function validateReveal(uint256 [] memory faceValue, uint256 secret, bytes32 [] memory hashedVal) pure internal returns(bool) {
         bool validRoll = true;
         uint8 i =0;
@@ -162,8 +198,10 @@ contract LiarsDice {
         return validRoll;         
     }
 
-      /// @dev Function to check if bid came as per current rules i.e increase face value or increase number of dices 
-    ///  with that value
+    /// @dev Function to check if bid came as per current rules i.e increase face value or increase in number of dices 
+    /// with same face value or increase in both. 
+    /// currently no penalty for sending invalid bid. simply he won't be the person that wins/looses based on the 
+    /// next person's challenge result.
     function validateAndSaveBid(uint256 faceValue, uint8 numDice)  internal returns(bool) {
         bool validBid = false;
         if (currentBid.faceValue < faceValue){
@@ -172,6 +210,7 @@ contract LiarsDice {
         if (currentBid.numDice < numDice){
            validBid = true;
         }
+        emit BidInfo(currentBid.faceValue, currentBid.numDice, numDice, faceValue );
         if (validBid){
             currentBid.faceValue = faceValue;
             currentBid.numDice = numDice;     
@@ -184,7 +223,12 @@ contract LiarsDice {
          address looser;
          uint8 looserPos;
          uint8 numBidFaceFaluesInRoll = rollFaceValues[currentBid.faceValue];
-         numBidFaceFaluesInRoll += rollFaceValues[1]; // one is wildcard and count towards current bid face value
+
+         /// one is wildcard and count towards current bid face value. Do that if bid is not on wildcard value.
+         if (currentBid.faceValue != 1) {
+            numBidFaceFaluesInRoll += rollFaceValues[1]; 
+         }
+         /// if we don't have atleast the current bid number of dices then bidder is looser
          if(numBidFaceFaluesInRoll < currentBid.numDice){
              looser = playerList[currentBid.playerPos];
              looserPos = currentBid.playerPos;
@@ -199,7 +243,7 @@ contract LiarsDice {
          numRound +=1;
 
          if(players[looser].numDice == 0){
-            players[looser].exists = false;
+            players[looser].inGame = false;
             // nullify this player so updateTurn will go to validate player
             playerList[players[looser].playerPos] == address(0); 
             numActivePlayers -=1;
@@ -210,10 +254,9 @@ contract LiarsDice {
          
     }
 
-  
      /// @notice Players join by calling joinGame by sending the gameCost money in msg.value
     function joinGame () public payable  atStage([Stages.initial, Stages.initial]) {
-        // require(players[msg.sender].exists == true, "Already joined the game");
+        require(players[msg.sender].exists == false, "Already joined the game");
         require(msg.value >= gameCost, "Not enough money sent to join game");
         PlayerInfo storage info = players[msg.sender];
         playerList.push(msg.sender);
@@ -240,7 +283,8 @@ contract LiarsDice {
 
     }
 
-      /// @notice Players join by calling joinGame by sending the gameCost money in msg.value
+    /// @notice front end app should call this function when stage is receiveHashedRoll after making player roll the dice
+    /// @param hashed: hashed values of player's  all dice face values.
     function recvHashedRoll(bytes32 [] memory hashed) public  atStage([Stages.receiveHashedRoll, Stages.receiveHashedRoll]) {
         // emit RecvHashedRoll(msg.sender, hashed[0], hashed[1]);
         for(uint8 i=0; i<hashed.length; i++){
@@ -258,11 +302,16 @@ contract LiarsDice {
         if(callCount == numActivePlayers){
             stage = Stages.bid;
             callCount = 0;
+            currentBid.faceValue = 0;
+            currentBid.numDice = 0;
         }
 
     }
 
-      /// @notice Players join by calling joinGame by sending the gameCost money in msg.value
+    /// @notice front end app should call this function when the stage is bid or bid_challenge 
+    /// to send the bid from the player who got the current turn.
+    /// @param faceValue: dice face value
+    /// @param numDice: number of dice in the current game wit that face value.
     function sendBid(uint8 faceValue, uint8 numDice) public  atStage([Stages.bid, Stages.bid_challenge]) returns(bool) {
 
         require(players[msg.sender].inGame == true, "You are not part of the game");
@@ -273,12 +322,14 @@ contract LiarsDice {
             stage = Stages.bid_challenge;
             updateTurn();
         }
-        // return result;
-        return true;
+        return result;
+        // return true;
 
 
     }
 
+    /// @notice front end app should call this function when the stage is bid_challenge 
+    /// if player opted to challenge previous bid 
     function sendChallenge() public  atStage([Stages.bid_challenge, Stages.bid_challenge]) {
 
         require(players[msg.sender].inGame == true, "You are not part of the game");
@@ -286,7 +337,11 @@ contract LiarsDice {
         stage = Stages.challenge;
     }
 
-     function sendNonHashedRoll(uint256 [] memory faceValue, uint256 secret) public  atStage([Stages.challenge, Stages.challenge]) {
+    /// @notice front end app should call this function when the stage is challenge
+    /// to reveal all the dice face values of current roll.
+    /// @param faceValue: all dice face values
+    /// @param secret: secret used to come up with hashed value sent before.
+    function sendNonHashedRoll(uint256 [] memory faceValue, uint256 secret) public  atStage([Stages.challenge, Stages.challenge]) {
         emit SendNonHashedRoll(msg.sender, faceValue.length, secret);
         for(uint8 i=0; i<faceValue.length; i++){
            emit SendNonHashedRoll(msg.sender, faceValue[i], faceValue[i]);
@@ -320,6 +375,8 @@ contract LiarsDice {
         }
 
     }
+    /// @notice front end app should call this to display players that are still in game
+    /// @return returns list of player's ids(positions) that are still in game
     function getActivePlayerLIst() public view returns(uint8[] memory) {
         uint8 []  memory activePlayers = new uint8[](playerList.length);
         uint8 idx = 0;
@@ -333,6 +390,10 @@ contract LiarsDice {
         }
         return  activePlayers;
     }
+
+    /// @notice front end app should call this to display player's dice values after challenge
+    /// @param playerPos: id/pos sent as part of getActivePlayerLIst call should be used 
+    /// @return returns list of face values of players dice.
     function getPlayerReveal(uint8 playerPos) public view returns(uint256 [] memory){
         require(playerPos < numPlayers, "Player does not exist");
         address player = playerList[playerPos];
@@ -371,6 +432,7 @@ contract LiarsDice {
         playerList.pop(); // don't care by this time all except one are null address
         callCount +=1 ;
         if (callCount == numPlayers){
+            deployer.transfer(address(this).balance);
             stage = Stages.initial;
             callCount = 0;
             revealUpdateReady = false;

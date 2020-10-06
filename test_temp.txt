@@ -52,12 +52,16 @@ inst1.recvHashedRoll(hasFaceValue2, {from:player2})
 
 
 inst1.sendBid(faceValue1[0], 2, {from:player1})
+inst1.sendBid(faceValue1[0], 3, {from:player2})
+
+
 
 inst1.sendChallenge({from:player2})
+inst1.sendChallenge({from:player1})
+
  
 inst1.sendNonHashedRoll(faceValue1, secret, {from:player1})
 inst1.sendNonHashedRoll(faceValue2, secret, {from:player2})
-
 
 
 inst1.revealUpdateReady({from:player1})
@@ -88,5 +92,10 @@ inst1.winnerPlayerPos();
 
 hasFaceValue2.pop()
 faceValue2.pop()
-ret2 = inst1.sendBid(faceValue1[0], 3, {from:player2})
 
+
+hasFaceValue1.pop()
+faceValue1.pop()
+
+inst1.withDrawMoney({from:player1})
+inst1.withDrawMoney({from:player2})
