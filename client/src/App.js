@@ -2,6 +2,7 @@ import React from 'react';
 import './App.css';
 import ReadString from "./ReadString";
 import SetString from "./SetString";
+import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { Navbar, Nav, Button } from "react-bootstrap";
 import Landing from "./components/Landing";
@@ -36,18 +37,26 @@ class App extends React.Component {
       <div className="App">
         <Navbar bg="dark" variant="dark">
           <div className="container">
-            <Navbar.Brand href="#home">Liar's Dice</Navbar.Brand>
+            <Navbar.Brand href="/">Liar's Dice</Navbar.Brand>
             <Nav className="mr-auto">
             </Nav>
             <Nav>
-              <Nav.Link href="#rules">Rules</Nav.Link>
-              <Nav.Link href="#play">Play</Nav.Link>
+              <Nav.Link href="/#rules">Rules</Nav.Link>
+              <Nav.Link href="/play">Play</Nav.Link>
             </Nav>
           </div>
         </Navbar>
 
-        <Game/>
-      
+        <Router>
+          <Switch>
+            <Route exact path="/" component={Landing} />
+            <Route exact path="/play" component={Game} />
+            <Route path="*" exact={true} component={Error} />
+
+          </Switch>
+
+        </Router>
+
       </div>
     );
   }
