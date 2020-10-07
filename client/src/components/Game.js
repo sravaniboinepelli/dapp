@@ -9,8 +9,8 @@ export default class Gaming extends Component {
     super(props);
 
     this.state = {
-      no_players: 5,
-      og_dice: 5,
+      no_players: 0,
+      og_dice: 0,
       no_dice: [],
       config: [],
       curr: 0,
@@ -26,6 +26,8 @@ export default class Gaming extends Component {
     this.RaiseBet = this.RaiseBet.bind(this);
     this.HandleNumber = this.HandleNumber.bind(this);
     this.HandleValue = this.HandleValue.bind(this);
+    this.HandlePlayer = this.HandlePlayer.bind(this);
+    this.HandleDice = this.HandleDice.bind(this);
 
     this.AssignDice();
     this.ShuffleDice();
@@ -36,7 +38,12 @@ export default class Gaming extends Component {
     var og_dice = this.state.og_dice;
     for (var i = 0; i < this.state.no_players; i++)
       no_dice.push(og_dice);
-    this.state.no_dice = no_dice;
+    
+      this.setState({
+        no_dice: no_dice
+      }, ()=>{
+        this.ShuffleDice();
+      })
   }
 
   ShuffleDice() {
@@ -49,7 +56,10 @@ export default class Gaming extends Component {
       config.push(player_config);
     }
 
-    this.state.config = config;
+    this.setState({
+      config: config
+    })
+
   }
 
   Challenge() {
@@ -95,56 +105,102 @@ export default class Gaming extends Component {
     })
   }
 
+  HandlePlayer = (e) => {
+    this.setState({
+      no_players: parseInt(e)
+    }, () => {
+      this.AssignDice();
+      console.log(this.state.no_players, this.state.og_dice);
+    })
+
+  }
+
+  HandleDice = (e) => {
+    this.setState({
+      og_dice: parseInt(e)
+    }, () => {
+      this.AssignDice();
+      console.log(this.state.no_players, this.state.og_dice);
+    }) 
+  }
+
   render() {
     var mapping = { 1: faDiceOne, 2: faDiceTwo, 3: faDiceThree, 4: faDiceFour, 5: faDiceFive, 6: faDiceSix }
+    var info = [1, 2, 3, 4, 5, 6]
     return (
       <div className="page">
         <h1>{this.state.topMessage}</h1>
-        <table className="center mt-3">
-          <tbody>
-            {this.state.config.map((row, index) => (
-              <tr>
+        { (!this.state.no_players || !this.state.og_dice) ?
+          <div>
+            <Dropdown as={ButtonGroup} onSelect={this.HandlePlayer}>
+              <Dropdown.Toggle variant="info" id="dropdown-custom-3" className="mt-4 mr-4">Number of Players</Dropdown.Toggle>
+              <Dropdown.Menu>
+                {
+                  info.map((val, ind) => {
+                    return <Dropdown.Item eventKey={val}>{val}</Dropdown.Item>
+                  })
+                }
+              </Dropdown.Menu>
+            </Dropdown>
+            <Dropdown as={ButtonGroup} onSelect={this.HandleDice}>
+              <Dropdown.Toggle variant="info" id="dropdown-custom-3" className="mt-4">Number of Dice</Dropdown.Toggle>
+              <Dropdown.Menu>
+                {
+                  info.map((val, ind) => {
+                    return <Dropdown.Item eventKey={val}>{val}</Dropdown.Item>
+                  })
+                }
+              </Dropdown.Menu>
+            </Dropdown>
+          </div>
+          :
+          <div>
+            <table className="center mt-3">
+              <tbody>
+                {this.state.config.map((row, index) => (
+                  <tr>
 
-                {row.map((col, ind) => { return index === this.state.curr || this.state.curr === -1 ? <td><FontAwesomeIcon className="mr-2 mb-2 ml-2" icon={mapping[col]} size="4x"></FontAwesomeIcon></td> : <td><FontAwesomeIcon icon={faSquare} size="4x" className="mr-2 mb-2 ml-2"></FontAwesomeIcon></td> }
-                )}
-              </tr>
+                    {row.map((col, ind) => { return index === this.state.curr || this.state.curr === -1 ? <td><FontAwesomeIcon className="mr-2 mb-2 ml-2" icon={mapping[col]} size="4x"></FontAwesomeIcon></td> : <td><FontAwesomeIcon icon={faSquare} size="4x" className="mr-2 mb-2 ml-2"></FontAwesomeIcon></td> }
+                    )}
+                  </tr>
 
-            ))}
-          </tbody>
-        </table>
+                ))}
+              </tbody>
+            </table>
 
-        <Button variant="danger" className="mt-4 mr-4" onClick={this.Challenge}>Challenge</Button>
-        <Dropdown as={ButtonGroup} className="mr-4 mt-4" onSelect={this.HandleNumber}>
-          <Dropdown.Toggle variant="info" id="dropdown-custom-1">Dice Number</Dropdown.Toggle>
-          <Dropdown.Menu>
-            <Dropdown.Item eventKey="1">1</Dropdown.Item>
-            <Dropdown.Item eventKey="2">2</Dropdown.Item>
-            <Dropdown.Item eventKey="3">3</Dropdown.Item>
-            <Dropdown.Item eventKey="4">4</Dropdown.Item>
-            <Dropdown.Item eventKey="5">5</Dropdown.Item>
-            <Dropdown.Item eventKey="6">6</Dropdown.Item>
-          </Dropdown.Menu>
-        </Dropdown>{' '}
-        <Dropdown as={ButtonGroup} onSelect={this.HandleValue}>
-          <Dropdown.Toggle variant="info" id="dropdown-custom-1" className="mt-4 mr-4">Dice Value</Dropdown.Toggle>
-          <Dropdown.Menu>
-            <Dropdown.Item eventKey="1">1</Dropdown.Item>
-            <Dropdown.Item eventKey="2">2</Dropdown.Item>
-            <Dropdown.Item eventKey="3">3</Dropdown.Item>
-            <Dropdown.Item eventKey="4">4</Dropdown.Item>
-            <Dropdown.Item eventKey="5">5</Dropdown.Item>
-            <Dropdown.Item eventKey="6">6</Dropdown.Item>
-          </Dropdown.Menu>
-        </Dropdown>
+            <Button variant="danger" className="mt-4 mr-4" onClick={this.Challenge}>Challenge</Button>
+            <Dropdown as={ButtonGroup} className="mr-4 mt-4" onSelect={this.HandleNumber}>
+              <Dropdown.Toggle variant="info" id="dropdown-custom-1">Dice Number</Dropdown.Toggle>
+              <Dropdown.Menu>
+                {
+                  info.map((val, ind) => {
+                    return <Dropdown.Item eventKey={val}>{val}</Dropdown.Item>
+                  })
+                }
+              </Dropdown.Menu>
+            </Dropdown>{' '}
+            <Dropdown as={ButtonGroup} onSelect={this.HandleValue}>
+              <Dropdown.Toggle variant="info" id="dropdown-custom-1" className="mt-4 mr-4">Dice Value</Dropdown.Toggle>
+              <Dropdown.Menu>
+                {
+                  info.map((val, ind) => {
+                    return <Dropdown.Item eventKey={val}>{val}</Dropdown.Item>
+                  })
+                }
+              </Dropdown.Menu>
 
-        <Button className="mt-4 mr-4" onClick={this.RaiseBet}>Raise Bet</Button>
-        <div className="mt-4">
-          {this.state.moves.length > 0 && <h3>Game log</h3>}
+            </Dropdown>
 
-        {
-          this.state.moves.reverse().map((move, ind) => { console.log(move); return move[0] === 0 ? <p>Player {move[1]} challenged player {move[2]}</p> : <p>Player {move[1]} raised {move[2]} dices of value {move[3]}</p> })
+            <Button className="mt-4 mr-4" onClick={this.RaiseBet}>Raise Bet</Button>
+            <div className="mt-4">
+              {this.state.moves.length > 0 && <h3>Game log</h3>}
+
+              {
+                this.state.moves.reverse().map((move, ind) => { console.log(move); return move[0] === 0 ? <p>Player {move[1]} challenged player {move[2]}</p> : <p>Player {move[1]} raised {move[2]} dices of value {move[3]}</p> })
+              }
+            </div>
+          </div>
         }
-        </div>
       </div>
 
     );
