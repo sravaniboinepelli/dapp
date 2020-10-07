@@ -16,6 +16,8 @@ export default class Gaming extends Component {
       curr: 0,
       diceVal: 0,
       diceNum: 0,
+      topMessage: "Liar's Dice Game",
+      moves: []
     };
 
     this.AssignDice = this.AssignDice.bind(this);
@@ -51,37 +53,45 @@ export default class Gaming extends Component {
   }
 
   Challenge() {
+    var curr_moves = this.state.moves;
+    var curr = this.state.curr;
+    var no_players = this.state.no_players
+    curr_moves.push([0, curr + 1, (curr + no_players - 1) % no_players + 1]);
     this.setState({
       curr: -1,
       diceVal: 0,
-      diceNum: 0
+      diceNum: 0,
+      moves: curr_moves
     })
   }
 
   RaiseBet() {
-    if(this.state.diceNum==0 || this.state.diceVal==0)
-    {
+    if (this.state.diceNum == 0 || this.state.diceVal == 0) {
       alert('Invalid move')
       return;
     }
-    
+
     var turn = (this.state.curr + 1) % this.state.no_players;
+    var curr_moves = this.state.moves;
+    curr_moves.push([1, this.state.curr + 1, this.state.diceNum, this.state.diceVal]);
     this.setState({
       curr: turn,
       diceNum: 0,
       diceVal: 0,
+      topMessage: "Player " + (turn + 1).toString() + "'s Turn",
+      moves: curr_moves
     })
   }
 
-  HandleNumber=(e) => {
+  HandleNumber = (e) => {
     this.setState({
-      diceNum: parseInt(e) 
+      diceNum: parseInt(e)
     })
   }
 
-  HandleValue=(e) => {
+  HandleValue = (e) => {
     this.setState({
-      diceVal: parseInt(e) 
+      diceVal: parseInt(e)
     })
   }
 
@@ -89,7 +99,7 @@ export default class Gaming extends Component {
     var mapping = { 1: faDiceOne, 2: faDiceTwo, 3: faDiceThree, 4: faDiceFour, 5: faDiceFive, 6: faDiceSix }
     return (
       <div className="page">
-        <h1>Liar's Dice Game</h1>
+        <h1>{this.state.topMessage}</h1>
         <table className="center mt-3">
           <tbody>
             {this.state.config.map((row, index) => (
@@ -99,41 +109,42 @@ export default class Gaming extends Component {
                 )}
               </tr>
 
-
             ))}
           </tbody>
         </table>
 
         <Button variant="danger" className="mt-4 mr-4" onClick={this.Challenge}>Challenge</Button>
-        {/* <br /> */}
-        {/* <div className="mt-4"> */}
-          <Dropdown as={ButtonGroup} className="mr-4 mt-4" onSelect={this.HandleNumber}>
-            <Dropdown.Toggle variant="info" id="dropdown-custom-1">Dice Number</Dropdown.Toggle>
-            <Dropdown.Menu>
-              <Dropdown.Item eventKey="1">1</Dropdown.Item>
-              <Dropdown.Item eventKey="2">2</Dropdown.Item>
-              <Dropdown.Item eventKey="3">3</Dropdown.Item>
-              <Dropdown.Item eventKey="4">4</Dropdown.Item>
-              <Dropdown.Item eventKey="5">5</Dropdown.Item>
-              <Dropdown.Item eventKey="6">6</Dropdown.Item>
-            </Dropdown.Menu>
-          </Dropdown>{' '}
-          <Dropdown as={ButtonGroup} onSelect={this.HandleValue}>
-            <Dropdown.Toggle variant="info" id="dropdown-custom-1" className="mt-4 mr-4">Dice Value</Dropdown.Toggle>
-            <Dropdown.Menu>
+        <Dropdown as={ButtonGroup} className="mr-4 mt-4" onSelect={this.HandleNumber}>
+          <Dropdown.Toggle variant="info" id="dropdown-custom-1">Dice Number</Dropdown.Toggle>
+          <Dropdown.Menu>
             <Dropdown.Item eventKey="1">1</Dropdown.Item>
-              <Dropdown.Item eventKey="2">2</Dropdown.Item>
-              <Dropdown.Item eventKey="3">3</Dropdown.Item>
-              <Dropdown.Item eventKey="4">4</Dropdown.Item>
-              <Dropdown.Item eventKey="5">5</Dropdown.Item>
-              <Dropdown.Item eventKey="6">6</Dropdown.Item>
-            </Dropdown.Menu>
-          </Dropdown>
+            <Dropdown.Item eventKey="2">2</Dropdown.Item>
+            <Dropdown.Item eventKey="3">3</Dropdown.Item>
+            <Dropdown.Item eventKey="4">4</Dropdown.Item>
+            <Dropdown.Item eventKey="5">5</Dropdown.Item>
+            <Dropdown.Item eventKey="6">6</Dropdown.Item>
+          </Dropdown.Menu>
+        </Dropdown>{' '}
+        <Dropdown as={ButtonGroup} onSelect={this.HandleValue}>
+          <Dropdown.Toggle variant="info" id="dropdown-custom-1" className="mt-4 mr-4">Dice Value</Dropdown.Toggle>
+          <Dropdown.Menu>
+            <Dropdown.Item eventKey="1">1</Dropdown.Item>
+            <Dropdown.Item eventKey="2">2</Dropdown.Item>
+            <Dropdown.Item eventKey="3">3</Dropdown.Item>
+            <Dropdown.Item eventKey="4">4</Dropdown.Item>
+            <Dropdown.Item eventKey="5">5</Dropdown.Item>
+            <Dropdown.Item eventKey="6">6</Dropdown.Item>
+          </Dropdown.Menu>
+        </Dropdown>
 
-        {/* </div> */}
         <Button className="mt-4 mr-4" onClick={this.RaiseBet}>Raise Bet</Button>
+        <div className="mt-4">
+          {this.state.moves.length > 0 && <h3>Game log</h3>}
 
-
+        {
+          this.state.moves.reverse().map((move, ind) => { console.log(move); return move[0] === 0 ? <p>Player {move[1]} challenged player {move[2]}</p> : <p>Player {move[1]} raised {move[2]} dices of value {move[3]}</p> })
+        }
+        </div>
       </div>
 
     );
