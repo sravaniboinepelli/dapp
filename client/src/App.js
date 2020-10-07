@@ -6,6 +6,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import { Navbar, Nav, Button } from "react-bootstrap";
 import Landing from "./components/Landing";
 import Error from "./components/404";
+import Game from "./components/Game";
 
 
 class App extends React.Component {
@@ -45,7 +46,7 @@ class App extends React.Component {
           </div>
         </Navbar>
 
-        <Error/>
+        <Game/>
       
       </div>
     );
