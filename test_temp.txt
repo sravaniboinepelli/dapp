@@ -64,28 +64,37 @@ inst1.sendNonHashedRoll(faceValue1, secret, {from:player1})
 inst1.sendNonHashedRoll(faceValue2, secret, {from:player2})
 
 
-inst1.revealUpdateReady({from:player1})
+inst1.isRevealUpdateReady({from:player1})
 
-inst1.numActivePlayers({from:player1})
+inst1.getNumActivePlayers({from:player1})
 
-inst1.getActivePlayerLIst({from:player1})
+response = await inst1.getActivePlayerLIst({from:player1})
+
+response[0].toNumber()
+response[1].toNumber()
+
 
 
 inst1.getPlayerReveal(0, {from:player1})
 inst1.getPlayerReveal(1, {from:player1})
 
-inst1.stage();
-inst1.winnerPlayerPos();
+response = await inst1.getGameStage();
+response.toNumber();
+
+response = await inst1.getWinnerPlayerId();
+response.toNumber();
+response = await inst1.getCurrentBidInfo()
+response[0].toNumber();
+response[1].toNumber();
+response[2].toNumber();
+
+response = await inst1.getCurrentRound()
+response.toNumber();
 
 
-
-
-
-
-
-
-
-
+inst1.ismyTurn({from:player1})
+response = await inst1.getGameCost()
+response.toNumber();
 
 
 // Below are extra

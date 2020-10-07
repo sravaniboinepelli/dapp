@@ -51,22 +51,22 @@ contract LiarsDice {
 
     /// @dev app fron end can check this and call functions to other players reveled dice so 
     /// that they can  be diplayed to player
-    bool public revealUpdateReady = false;
+    bool revealUpdateReady = false;
 
     /// @dev number of players that need to be join to start the game
     uint8 numPlayers =2;
     /// @dev number of players that are still in the game
-    uint8 public numActivePlayers;
+    uint8 numActivePlayers;
     /// @dev current round number
-    uint8 public numRound=0;
-    uint8 public turnOfPlayer;
+    uint8  numRound=0;
+    uint8  turnOfPlayer;
     /// @dev the amount each player has to pay to play the game.
-    uint256 public gameCost;
+    uint256  gameCost;
 
     uint8 callCount=0;
 
     /// @dev Front end app shows this by concatenating with string player (instead of address show as player 1, player 2 etc)
-    uint8 public winnerPlayerPos;
+    uint8  winnerPlayerPos;
     bidInfo currentBid;
 
     /// @dev players list player at pos 0 will strat the first bid and turns go in clock wise direction.
@@ -78,7 +78,7 @@ contract LiarsDice {
     /// @dev Current stage of the game, fron end apps should call appropriate functions based on stage and display 
     /// relavent info to players like showing other players dice after challenge, Ask users to roll, bid/challenge
     /// (in addition to getting the turn info)
-    Stages public stage;
+    Stages stage;
 
 
     /// @dev stores the number of dice with that face value, updated after getting unHashed face value from each player
@@ -124,12 +124,75 @@ contract LiarsDice {
 
     }
 
-
+    /// @notice Function returns the amount present in the contract address balance. 
+    /// @return returns conntract balance
     function balanceof() external view returns(uint){
         
         return address(this).balance;
     }
+    /// @notice Function Front end app call to see number of players that are still in the game 
+    /// @return returns number of players currently  in the game
+    function getNumActivePlayers() external view returns(uint8){
+        
+        return numActivePlayers;
+    }
+    /// @notice Function Front end app call to diplay current round number .
+    /// @return returns round number.
+    function getCurrentRound() external view returns(uint8){
+        
+        return numRound;
+    }
+    /// @notice Function Front end app call to check the turn.
+    /// @return returns if its this player turn. Based on this app should show bid/challenge options to player.
+    function ismyTurn() external view returns(bool){
+        
+        if (turnOfPlayer == 255){
+           return false;
+        }
+        if (players[msg.sender].inGame == true){
+            return (players[msg.sender].playerPos == turnOfPlayer);
+        }
+        return false;
+    }
+    /// @notice Function Front end app call to diplay amount player has to pay to enter the game.    
+    /// @return returns amount in wei 
+    function getGameCost() external view returns(uint256){
+        
+        return gameCost;
+    }
 
+    /// @notice Function Front end app call this function to see if all the players 
+    /// revealed their roll after a challenge. And can call getActivePlayerLIst and getPlayerReveal to
+    /// update dashboard.
+    /// @return returns True or false 
+    function isRevealUpdateReady() external view returns(bool){
+        
+        return revealUpdateReady;
+    }
+    /// @notice Function Front end app call this function to show winner.
+    /// shows this by concatenating with string player (instead of address, player 1 , player 2 will be shown)
+    /// @return winnerId: return current round winner. when single player is left, this contains game winner.
+    /// value 255 should be read as None.
+    function getWinnerPlayerId() external view returns(uint8 ){
+        return winnerPlayerPos;
+    }
+    /// @notice Function Front end app call this function to get current bid information
+    /// @return faceValue: dice face value bid by player numDice: number of dice with that face value
+    /// playerId: id of the palyer from whom this bid was received.
+    function getCurrentBidInfo() external view returns(uint256, uint8, uint8){
+        // uint256 faceValue1 = currentBid.faceValue;
+        // uint8 numDice1 = currentBid.numDice;
+        // return (faceValue1, numDice1);
+        return (currentBid.faceValue, currentBid.numDice, currentBid.playerPos);
+    }
+    /// @notice Function Front end app call to get game stage.
+    /// @return stage: returns current stage of the game as enum.
+    ///  initial = 0, receiveHashedRoll=1,bid =2,bid_challenge= 3,
+    /// challenge=4,receiveRevealedRoll=5,endGame=6
+    function getGameStage() external view returns(Stages ){
+        return (stage);
+    }
+    
     /// @dev Validates if a perticuler function can be called at a given stage of the game
     /// @dev _stage:  list of stages in which a perticuler function call is allowed
     modifier atStage(Stages [2] memory _stage)
