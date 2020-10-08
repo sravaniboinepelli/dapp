@@ -32,6 +32,13 @@
   margin: auto;
 }
 
+.middle{
+  margin-top: 40px !important;
+  width: 400px;
+  max-width: 90%;
+  margin: 0 auto;
+}
+
 @keyframes App-logo-spin {
   from {
     transform: rotate(0deg);

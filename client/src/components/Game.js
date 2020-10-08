@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Button, DropdownButton, Dropdown, ButtonGroup } from "react-bootstrap";
+import { Button, DropdownButton, Dropdown, ButtonGroup, Form } from "react-bootstrap";
 import styles from "../App.css";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSquare, faDiceOne, faDiceThree, faDiceTwo, faDiceFour, faDiceFive, faDiceSix } from '@fortawesome/free-solid-svg-icons'
@@ -17,7 +17,8 @@ export default class Gaming extends Component {
       diceVal: 0,
       diceNum: 0,
       topMessage: "Liar's Dice Game",
-      moves: []
+      moves: [],
+      isSubmitted: 0
     };
     const { drizzle, drizzleState } = this.props;
     this.AssignDice = this.AssignDice.bind(this);
@@ -30,21 +31,22 @@ export default class Gaming extends Component {
     this.HandleDice = this.HandleDice.bind(this);
     this.setPlayerNo = this.setPlayerNo.bind(this);
     this.setDiceNo = this.setDiceNo.bind(this);
+    this.handleSubmit = this.handleSubmit.bind(this);
     this.AssignDice();
     this.ShuffleDice();
   }
-  
+
   AssignDice() {
     var no_dice = []
     var og_dice = this.state.og_dice;
     for (var i = 0; i < this.state.no_players; i++)
       no_dice.push(og_dice);
-    
-      this.setState({
-        no_dice: no_dice
-      }, ()=>{
-        this.ShuffleDice();
-      })
+
+    this.setState({
+      no_dice: no_dice
+    }, () => {
+      this.ShuffleDice();
+    })
   }
 
   ShuffleDice() {
@@ -109,58 +111,67 @@ export default class Gaming extends Component {
   HandlePlayer = (e) => {
     this.setState({
       no_players: parseInt(e)
-    }, () => {
-      console.log("Player"+this.state.no_players);
-      this.AssignDice();
-      const { drizzle, drizzleState } = this.props;
-      //this.setPlayerNo(this.state.no_players,drizzle,drizzleState);
     })
   }
 
-  setPlayerNo = (no_players,drizzle,drizzleState) => {
+  setPlayerNo = (no_players, drizzle, drizzleState) => {
     const contract = drizzle.contracts.Liars;
     //let drizzle know we want to call the `set` method with `value`
     const stackId = contract.methods["setPlayer"].cacheSend(no_players, {
-        from: drizzleState.accounts[0]
-    });
-
-    //save the `stackId` for later reference
-    //this.setState({ stackId });
-};
-
-  setDiceNo = (diceNum,drizzle,drizzleState) => {
-    const contract = drizzle.contracts.Liars;
-    //let drizzle know we want to call the `set` method with `value`
-    const stackId = contract.methods["setDice"].cacheSend(diceNum, {
-        from: drizzleState.accounts[0]
+      from: drizzleState.accounts[0]
     });
 
     //save the `stackId` for later reference
     //this.setState({ stackId });
   };
 
-readPlayer = (drizzle,drizzleState) => {
-  const contract = drizzle.contracts.Liars;
+  setDiceNo = (diceNum, drizzle, drizzleState) => {
+    const contract = drizzle.contracts.Liars;
+    //let drizzle know we want to call the `set` method with `value`
+    const stackId = contract.methods["setDice"].cacheSend(diceNum, {
+      from: drizzleState.accounts[0]
+    });
 
-  // let drizzle know we want to watch the `myString` method
-  const dataKey = contract.methods["numActivePlayers"].cacheCall();
+    //save the `stackId` for later reference
+    //this.setState({ stackId });
+  };
 
-  // save the `dataKey` to local component state for later reference
-  this.setState({ dataKey });
-  const { Liars } = this.props.drizzleState.contracts;
-  const numPlayersPaid = Liars.numActivePlayers[this.state.dataKey];
-  this.numPlayersPaid = numPlayersPaid;
-}
+  readPlayer = (drizzle, drizzleState) => {
+    const contract = drizzle.contracts.Liars;
+
+    // let drizzle know we want to watch the `myString` method
+    const dataKey = contract.methods["numActivePlayers"].cacheCall();
+
+    // save the `dataKey` to local component state for later reference
+    this.setState({ dataKey });
+    const { Liars } = this.props.drizzleState.contracts;
+    const numPlayersPaid = Liars.numActivePlayers[this.state.dataKey];
+    this.numPlayersPaid = numPlayersPaid;
+  }
 
   HandleDice = (e) => {
     this.setState({
       og_dice: parseInt(e)
+    })
+  }
+
+  handleForm = (event) => {
+    let nam = event.target.name;
+    let val = event.target.value;
+    this.setState({ [nam]: val });
+  }
+
+  handleSubmit() {
+    if (!this.state.no_players || !this.state.og_dice) {
+      alert("Choose appropriate value");
+      return;
+    }
+
+    this.setState({
+      isSubmitted: 1
     }, () => {
       this.AssignDice();
-      console.log(this.state.no_players, this.state.og_dice);
-      const { drizzle, drizzleState } = this.props;
-      //this.setDiceNo(this.state.diceNum,drizzle,drizzleState);
-    }) 
+    })
   }
 
   render() {
@@ -172,28 +183,32 @@ readPlayer = (drizzle,drizzleState) => {
     return (
       <div className="page">
         <h1>{this.state.topMessage}</h1>
-        { (!this.state.no_players || !this.state.og_dice) ?
+        { (!this.state.isSubmitted) ?
           <div>
-            <Dropdown as={ButtonGroup} onSelect={this.HandlePlayer}>
-              <Dropdown.Toggle variant="info" id="dropdown-custom-3" className="mt-4 mr-4">Number of Players</Dropdown.Toggle>
-              <Dropdown.Menu>
+            <div class="middle">
+              <select class="form-control" name="no_players" value={this.state.value} onChange={this.handleForm}>
+                <option selected disabled>Number of Players</option>
+
                 {
                   info.map((val, ind) => {
-                    return <Dropdown.Item eventKey={val}>{val}</Dropdown.Item>
+                    return <option value={val}>{val}</option>
                   })
                 }
-              </Dropdown.Menu>
-            </Dropdown>
-            <Dropdown as={ButtonGroup} onSelect={this.HandleDice}>
-              <Dropdown.Toggle variant="info" id="dropdown-custom-3" className="mt-4">Number of Dice</Dropdown.Toggle>
-              <Dropdown.Menu>
+              </select>
+              <br />
+
+              <select class="form-control" title="Number" name="og_dice" value={this.state.value} onChange={this.handleForm}>
+                <option selected disabled>Number of Dice</option>
                 {
                   info.map((val, ind) => {
-                    return <Dropdown.Item eventKey={val}>{val}</Dropdown.Item>
+                    return <option value={val}>{val}</option>
                   })
                 }
-              </Dropdown.Menu>
-            </Dropdown>
+              </select>
+              <br />
+
+              <button type="submit" class="btn btn-primary mb-2" onClick={this.handleSubmit}>Submit</button>
+            </div>
           </div>
           :
           <div>
