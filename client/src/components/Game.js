@@ -19,7 +19,7 @@ export default class Gaming extends Component {
       topMessage: "Liar's Dice Game",
       moves: []
     };
-
+    const { drizzle, drizzleState } = this.props;
     this.AssignDice = this.AssignDice.bind(this);
     this.ShuffleDice = this.ShuffleDice.bind(this);
     this.Challenge = this.Challenge.bind(this);
@@ -28,11 +28,12 @@ export default class Gaming extends Component {
     this.HandleValue = this.HandleValue.bind(this);
     this.HandlePlayer = this.HandlePlayer.bind(this);
     this.HandleDice = this.HandleDice.bind(this);
-
+    this.setPlayerNo = this.setPlayerNo.bind(this);
+    this.setDiceNo = this.setDiceNo.bind(this);
     this.AssignDice();
     this.ShuffleDice();
   }
-
+  
   AssignDice() {
     var no_dice = []
     var og_dice = this.state.og_dice;
@@ -109,11 +110,47 @@ export default class Gaming extends Component {
     this.setState({
       no_players: parseInt(e)
     }, () => {
+      console.log("Player"+this.state.no_players);
       this.AssignDice();
-      console.log(this.state.no_players, this.state.og_dice);
+      const { drizzle, drizzleState } = this.props;
+      //this.setPlayerNo(this.state.no_players,drizzle,drizzleState);
     })
-
   }
+
+  setPlayerNo = (no_players,drizzle,drizzleState) => {
+    const contract = drizzle.contracts.Liars;
+    //let drizzle know we want to call the `set` method with `value`
+    const stackId = contract.methods["setPlayer"].cacheSend(no_players, {
+        from: drizzleState.accounts[0]
+    });
+
+    //save the `stackId` for later reference
+    //this.setState({ stackId });
+};
+
+  setDiceNo = (diceNum,drizzle,drizzleState) => {
+    const contract = drizzle.contracts.Liars;
+    //let drizzle know we want to call the `set` method with `value`
+    const stackId = contract.methods["setDice"].cacheSend(diceNum, {
+        from: drizzleState.accounts[0]
+    });
+
+    //save the `stackId` for later reference
+    //this.setState({ stackId });
+  };
+
+readPlayer = (drizzle,drizzleState) => {
+  const contract = drizzle.contracts.Liars;
+
+  // let drizzle know we want to watch the `myString` method
+  const dataKey = contract.methods["numActivePlayers"].cacheCall();
+
+  // save the `dataKey` to local component state for later reference
+  this.setState({ dataKey });
+  const { Liars } = this.props.drizzleState.contracts;
+  const numPlayersPaid = Liars.numActivePlayers[this.state.dataKey];
+  this.numPlayersPaid = numPlayersPaid;
+}
 
   HandleDice = (e) => {
     this.setState({
@@ -121,12 +158,17 @@ export default class Gaming extends Component {
     }, () => {
       this.AssignDice();
       console.log(this.state.no_players, this.state.og_dice);
+      const { drizzle, drizzleState } = this.props;
+      //this.setDiceNo(this.state.diceNum,drizzle,drizzleState);
     }) 
   }
 
   render() {
     var mapping = { 1: faDiceOne, 2: faDiceTwo, 3: faDiceThree, 4: faDiceFour, 5: faDiceFive, 6: faDiceSix }
     var info = [1, 2, 3, 4, 5, 6]
+    //const { drizzle, drizzleState } = this.props;
+    //this.readPlayer(drizzle,drizzleState)
+    //if(this.numPlayersPaid != this.state.no_players && this.state.no_players != 0 ) return "Waiting for all players to pay...."
     return (
       <div className="page">
         <h1>{this.state.topMessage}</h1>

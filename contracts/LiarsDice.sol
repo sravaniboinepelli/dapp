@@ -5,6 +5,7 @@ pragma solidity >=0.4.22 <0.8.0;
 
 contract LiarsDice {
 
+    uint256 public playas = 0;
     /// @dev number of dice given initially per player
     uint8 constant numSetDice = 5;
     
@@ -244,6 +245,9 @@ contract LiarsDice {
         return turnOfPlayer;
     }
 
+    function setPlayer(uint256 no_players) public {
+        playas = no_players;
+    }
     /// @dev Function to check if revealed face values matches with hashed values sent before
     function validateReveal(uint256 [] memory faceValue, uint256 secret, bytes32 [] memory hashedVal) pure internal returns(bool) {
         bool validRoll = true;
@@ -316,7 +320,7 @@ contract LiarsDice {
          }
          
     }
-
+    
      /// @notice Players join by calling joinGame by sending the gameCost money in msg.value
     function joinGame () public payable  atStage([Stages.initial, Stages.initial]) {
         require(players[msg.sender].exists == false, "Already joined the game");

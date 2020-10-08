@@ -1,7 +1,5 @@
 import React from 'react';
 import './App.css';
-import ReadString from "./ReadString";
-import SetString from "./SetString";
 import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { Navbar, Nav, Button } from "react-bootstrap";
@@ -44,18 +42,21 @@ class App extends React.Component {
               <Nav.Link href="/#rules">Rules</Nav.Link>
               <Nav.Link href="/play">Play</Nav.Link>
             </Nav>
+          
           </div>
         </Navbar>
 
         <Router>
           <Switch>
             <Route exact path="/" component={Landing} />
-            <Route exact path="/play" component={Game} />
+            <Route exact path="/play" component={() => <Game drizzle={this.props.drizzle} drizzleState={this.state.drizzleState} />}/>
+X
             <Route path="*" exact={true} component={Error} />
 
           </Switch>
 
         </Router>
+        {/* <Game drizzle={this.props.drizzle} drizzleState={this.state.drizzleState}/> */}
 
       </div>
     );
