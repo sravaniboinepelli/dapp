@@ -11,19 +11,17 @@ contract Liars {
     enum Stages
     {
         initial,
-        // roll,
-        receiveHashedRoll,
+        roll,
         bid,
         bid_challenge,
         challenge,
-        receiveRevealedRoll,
         endGame
     }
 
 
     /// @dev player bids by specifying the face value  and the number of dice with that face  value
     struct bidInfo {
-        uint256 faceValue;
+        uint8 faceValue;
         uint8 numDice;
         uint8 playerPos;
     }
@@ -42,29 +40,26 @@ contract Liars {
          uint8 prevNumDice;
          uint8 playerPos;    
          uint256 balance; 
-         bytes32 [] concealedRollFaces;
-         uint256 [] revealedRollFaces;
-    
+         uint256 [] RollFaces;
     }
+
     /// @dev All the money from will be tranfered to this account.
     address payable deployer = msg.sender;
 
-    /// @dev app fron end can check this and call functions to other players reveled dice so 
-    /// that they can  be diplayed to player
-    bool revealUpdateReady = false;
-
     /// @dev number of players that need to be join to start the game
     uint8 public numPlayers =2;
+
     /// @dev number of players that are still in the game
     uint8 public numActivePlayers;
+
     /// @dev current round number
     uint8  numRound=0;
     uint8  turnOfPlayer;
+
     /// @dev the amount each player has to pay to play the game.
     uint256  gameCost;
 
     uint8 callCount=0;
-
     /// @dev Front end app shows this by concatenating with string player (instead of address show as player 1, player 2 etc)
     uint8  winnerPlayerPos;
     bidInfo currentBid;
@@ -89,16 +84,7 @@ contract Liars {
         uint256 value
 
     );
-     event RecvHashedRoll(
-        address indexed _from,
-        bytes32 _value1,
-        bytes32 _value2
-    );
-    event SendNonHashedRoll(
-        address indexed _from,
-        uint256 _value,
-        uint256 _secret
-    );
+
      event BidInfo(
         uint256 _bidFaceValue,
         uint8 _bidNumDice,
@@ -122,12 +108,77 @@ contract Liars {
 
     }
 
-    function setPlayer(uint8 no_players) public {
+    function setPD(uint8 no_players, uint8 no_dice) public {
         numPlayers = no_players;
+        numSetDice = no_dice;
     }
 
-   function setDice(uint8 no_dice) public {
-        numSetDice = no_dice;
+    function updateTurn()  internal returns(uint8) {
+        if( numActivePlayers == 1){
+            turnOfPlayer = 255;
+            return turnOfPlayer;
+        }
+        uint8 origTurn = turnOfPlayer;
+        turnOfPlayer += 1;
+        if(turnOfPlayer >= numPlayers){
+           turnOfPlayer = 0; 
+        }
+        if(turnOfPlayer == origTurn){
+           turnOfPlayer = 255; 
+        }
+        while(playerList[turnOfPlayer] == address(0)){
+            turnOfPlayer += 1;
+
+            if (turnOfPlayer >= numPlayers){
+                turnOfPlayer = 0;
+            }
+            if(turnOfPlayer == origTurn){
+               turnOfPlayer = 255; 
+               break;
+            }
+        }
+        
+        return turnOfPlayer;
+    }
+    function Challenge() public {
+        uint8 currplayerpos = players[msg.sender].playerPos;
+        address challengedplayer = playerList[currentBid.playerPos];
+        uint8 j = 0;
+        uint16 facecount = 0;
+        uint8 face = currentBid.faceValue;
+        for( j =0; j<playerList.length; j++){
+            uint8 i = 0;
+            for(i = 0; i<players[playerList[j]].RollFaces.length; i++){
+                if(players[playerList[j]].RollFaces[i]==face)
+                    facecount += 1;
+            }
+        }
+        if(facecount >= currentBid.numDice){
+            //ChallengerWins(msg.sender);
+        }
+        else{
+            //ChallengerLoses(msg.sender);
+        }
+
+    }
+    function Bet(uint8 numDice, uint8 faceValue) public {
+        currentBid.numDice = numDice;
+        currentBid.faceValue = faceValue;
+        currentBid.playerPos = players[msg.sender].playerPos;
+    }
+    function DiceShuffle() public {
+        uint8 j = 0;
+        for( j = 0; j<playerList.length;j++){
+            uint8 i = 0;
+            for(i = 0; i < numSetDice; i++){
+                if(i>players[playerList[j]].numDice){
+                    players[playerList[j]].RollFaces[i] = 255 ;
+                }
+                else{
+                    players[playerList[j]].RollFaces[i] = 2; //Random Generator
+                }
+            }
+        }
     }
 
     function initialpay() public payable {
@@ -139,11 +190,9 @@ contract Liars {
         info.inGame = true;
         info.numDice = numSetDice;
         info.prevNumDice = numSetDice;
-        if (info.concealedRollFaces.length == 0){
-            info.concealedRollFaces = new bytes32 [](numSetDice);
-        }
-        if (info.revealedRollFaces.length == 0){
-            info.revealedRollFaces = new uint256 [](numSetDice);
+
+        if (info.RollFaces.length == 0){
+            info.RollFaces = new uint256 [](numSetDice);
         }
         info.playerPos = (uint8)(playerList.length) -1;
         numActivePlayers +=1;
@@ -153,11 +202,46 @@ contract Liars {
             info.balance = msg.value - gameCost;
         }
         if(playerList.length == numPlayers){
-            stage = Stages.receiveHashedRoll;
+            stage = Stages.roll;
         }
     }
     /// @notice  Fallback function to receive any transfers
     receive() external payable {     
+    }
+
+    function applyGameRules() internal {
+         address loser;
+         uint8 loserPos;
+         uint8 numBidFaceFaluesInRoll = rollFaceValues[currentBid.faceValue];
+
+         /// one is wildcard and count towards current bid face value. Do that if bid is not on wildcard value.
+         if (currentBid.faceValue != 1) {
+            numBidFaceFaluesInRoll += rollFaceValues[1]; 
+         }
+         /// if we don't have atleast the current bid number of dices then bidder is loser
+         if(numBidFaceFaluesInRoll < currentBid.numDice){
+             loser = playerList[currentBid.playerPos];
+             loserPos = currentBid.playerPos;
+             winnerPlayerPos = turnOfPlayer;
+         }else {
+           loser = playerList[turnOfPlayer];
+           loserPos = turnOfPlayer;
+           winnerPlayerPos = currentBid.playerPos;
+         }
+         players[loser].prevNumDice = players[loser].numDice;
+         players[loser].numDice -= 1;
+         numRound +=1;
+
+         if(players[loser].numDice == 0){
+            players[loser].inGame = false;
+            // nullify this player so updateTurn will go to validate player
+            playerList[players[loser].playerPos] == address(0); 
+            numActivePlayers -=1;
+            updateTurn();
+         }else {
+             turnOfPlayer = loserPos; //loser still in game he starts the next round
+         }
+         
     }
     
 }

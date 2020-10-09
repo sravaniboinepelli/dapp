@@ -29,8 +29,7 @@ export default class Gaming extends Component {
     this.HandleValue = this.HandleValue.bind(this);
     this.HandlePlayer = this.HandlePlayer.bind(this);
     this.HandleDice = this.HandleDice.bind(this);
-    this.setPlayerNo = this.setPlayerNo.bind(this);
-    this.setDiceNo = this.setDiceNo.bind(this);
+    this.setPDNo = this.setPDNo.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
     this.AssignDice();
     this.ShuffleDice();
@@ -114,10 +113,10 @@ export default class Gaming extends Component {
     })
   }
 
-  setPlayerNo = (no_players, drizzle, drizzleState) => {
+  setPDNo = (no_players, og_dice, drizzle, drizzleState) => {
     const contract = drizzle.contracts.Liars;
     //let drizzle know we want to call the `set` method with `value`
-    const stackId = contract.methods["setPlayer"].cacheSend(no_players, {
+    const stackId = contract.methods["setPD"].cacheSend(no_players, og_dice, {
       from: drizzleState.accounts[0]
     });
 
@@ -125,16 +124,6 @@ export default class Gaming extends Component {
     //this.setState({ stackId });
   };
 
-  setDiceNo = (diceNum, drizzle, drizzleState) => {
-    const contract = drizzle.contracts.Liars;
-    //let drizzle know we want to call the `set` method with `value`
-    const stackId = contract.methods["setDice"].cacheSend(diceNum, {
-      from: drizzleState.accounts[0]
-    });
-
-    //save the `stackId` for later reference
-    //this.setState({ stackId });
-  };
 
   readPlayer = (drizzle, drizzleState) => {
     const contract = drizzle.contracts.Liars;
@@ -159,6 +148,7 @@ export default class Gaming extends Component {
     let nam = event.target.name;
     let val = event.target.value;
     this.setState({ [nam]: val });
+    console.log({[nam]:val});
   }
 
   handleSubmit() {
@@ -166,11 +156,12 @@ export default class Gaming extends Component {
       alert("Choose appropriate value");
       return;
     }
-
+    //this.setPDNo(this.state.no_players,this.state.og_dice,this.props.drizzle,this.props.drizzleState)
     this.setState({
-      isSubmitted: 1
+    isSubmitted: 1
     }, () => {
       this.AssignDice();
+      console.log(this.state.isSubmitted);
     })
   }
 

@@ -245,9 +245,6 @@ contract LiarsDice {
         return turnOfPlayer;
     }
 
-    function setPlayer(uint256 no_players) public {
-        playas = no_players;
-    }
     /// @dev Function to check if revealed face values matches with hashed values sent before
     function validateReveal(uint256 [] memory faceValue, uint256 secret, bytes32 [] memory hashedVal) pure internal returns(bool) {
         bool validRoll = true;
@@ -267,7 +264,7 @@ contract LiarsDice {
 
     /// @dev Function to check if bid came as per current rules i.e increase face value or increase in number of dices 
     /// with same face value or increase in both. 
-    /// currently no penalty for sending invalid bid. simply he won't be the person that wins/looses based on the 
+    /// currently no penalty for sending invalid bid. simply he won't be the person that wins/loses based on the 
     /// next person's challenge result.
     function validateAndSaveBid(uint256 faceValue, uint8 numDice)  internal returns(bool) {
         bool validBid = false;
@@ -284,39 +281,39 @@ contract LiarsDice {
         }
         return validBid;         
     }
-     /// @dev Function to determine looser based on reveled rolls of all players and by considering one as wildcard
-     /// looser will loose one dice and starts the next round. If he looses all dice then next player will start the round.
+     /// @dev Function to determine loser based on reveled rolls of all players and by considering one as wildcard
+     /// loser will lose one dice and starts the next round. If he loses all dice then next player will start the round.
     function applyGameRules()  internal  {
-         address looser;
-         uint8 looserPos;
+         address loser;
+         uint8 loserPos;
          uint8 numBidFaceFaluesInRoll = rollFaceValues[currentBid.faceValue];
 
          /// one is wildcard and count towards current bid face value. Do that if bid is not on wildcard value.
          if (currentBid.faceValue != 1) {
             numBidFaceFaluesInRoll += rollFaceValues[1]; 
          }
-         /// if we don't have atleast the current bid number of dices then bidder is looser
+         /// if we don't have atleast the current bid number of dices then bidder is loser
          if(numBidFaceFaluesInRoll < currentBid.numDice){
-             looser = playerList[currentBid.playerPos];
-             looserPos = currentBid.playerPos;
+             loser = playerList[currentBid.playerPos];
+             loserPos = currentBid.playerPos;
              winnerPlayerPos = turnOfPlayer;
          }else {
-           looser = playerList[turnOfPlayer];
-           looserPos = turnOfPlayer;
+           loser = playerList[turnOfPlayer];
+           loserPos = turnOfPlayer;
            winnerPlayerPos = currentBid.playerPos;
          }
-         players[looser].prevNumDice = players[looser].numDice;
-         players[looser].numDice -= 1;
+         players[loser].prevNumDice = players[loser].numDice;
+         players[loser].numDice -= 1;
          numRound +=1;
 
-         if(players[looser].numDice == 0){
-            players[looser].inGame = false;
+         if(players[loser].numDice == 0){
+            players[loser].inGame = false;
             // nullify this player so updateTurn will go to validate player
-            playerList[players[looser].playerPos] == address(0); 
+            playerList[players[loser].playerPos] == address(0); 
             numActivePlayers -=1;
             updateTurn();
          }else {
-             turnOfPlayer = looserPos; //looser still in game he starts the next round
+             turnOfPlayer = loserPos; //loser still in game he starts the next round
          }
          
     }
