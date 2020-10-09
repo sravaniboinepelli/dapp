@@ -156,7 +156,7 @@ export default class Gaming extends Component {
       alert("Choose appropriate value");
       return;
     }
-    //this.setPDNo(this.state.no_players,this.state.og_dice,this.props.drizzle,this.props.drizzleState)
+    this.setPDNo(this.state.no_players,this.state.og_dice,this.props.drizzle,this.props.drizzleState)
     this.setState({
     isSubmitted: 1
     }, () => {
