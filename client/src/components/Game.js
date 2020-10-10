@@ -3,6 +3,7 @@ import { Button, DropdownButton, Dropdown, ButtonGroup, Form } from "react-boots
 import styles from "../App.css";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSquare, faDiceOne, faDiceThree, faDiceTwo, faDiceFour, faDiceFive, faDiceSix } from '@fortawesome/free-solid-svg-icons'
+import SetString from './SetString'
 
 export default class Gaming extends Component {
   constructor(props) {
@@ -18,18 +19,19 @@ export default class Gaming extends Component {
       diceNum: 0,
       topMessage: "Liar's Dice Game",
       moves: [],
-      isSubmitted: 1
+      isSubmitted: 1,
+      drizzleState: this.props.drizzleState
     };
     const { drizzle, drizzleState } = this.props;
     this.AssignDice = this.AssignDice.bind(this);
     this.ShuffleDice = this.ShuffleDice.bind(this);
     this.Challenge = this.Challenge.bind(this);
     this.RaiseBet = this.RaiseBet.bind(this);
-    this.HandleNumber = this.HandleNumber.bind(this);
-    this.HandleValue = this.HandleValue.bind(this);
-    this.HandlePlayer = this.HandlePlayer.bind(this);
-    this.HandleDice = this.HandleDice.bind(this);
-    this.setPDNo = this.setPDNo.bind(this);
+    // this.HandleNumber = this.HandleNumber.bind(this);
+    // this.HandleValue = this.HandleValue.bind(this);
+    // this.HandlePlayer = this.HandlePlayer.bind(this);
+    // this.HandleDice = this.HandleDice.bind(this);
+    // this.setPDNo = this.setPDNo.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
     var no_dice = []
     for (var i = 0; i < this.state.no_players; i++)
@@ -262,6 +264,10 @@ export default class Gaming extends Component {
             </div>
           </div>
         }
+         <SetString
+          drizzle={this.props.drizzle}
+          drizzleState={this.state.drizzleState}
+        />
       </div>
 
     );

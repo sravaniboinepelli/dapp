@@ -8,6 +8,8 @@ class SetString extends React.Component {
         if (e.keyCode === 13) {
             this.setValue(e.target.value);
         }
+
+        e.preventDefault();
     };
 
     setValue = value => {
@@ -16,7 +18,7 @@ class SetString extends React.Component {
 
         const contract = drizzle.contracts.MyStringStore;
 
-        console.log(drizzleState.accounts[0]);
+        // console.log("LALALA"+contract);
         // let drizzle know we want to call the `set` method with `value`
         const stackId = contract.methods["set"].cacheSend(value, {
             from: drizzleState.accounts[0]
