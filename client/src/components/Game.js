@@ -10,8 +10,8 @@ export default class Gaming extends Component {
     super(props);
 
     this.state = {
-      no_players: 5,
-      og_dice: 5,
+      no_players: 0,
+      og_dice: 0,
       no_dice: [],
       config: [],
       curr: 0,
@@ -19,7 +19,7 @@ export default class Gaming extends Component {
       diceNum: 0,
       topMessage: "Liar's Dice Game",
       moves: [],
-      isSubmitted: 1,
+      isSubmitted: 0,
       drizzleState: this.props.drizzleState
     };
     const { drizzle, drizzleState } = this.props;
@@ -33,21 +33,21 @@ export default class Gaming extends Component {
     // this.HandleDice = this.HandleDice.bind(this);
     // this.setPDNo = this.setPDNo.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
-    var no_dice = []
-    for (var i = 0; i < this.state.no_players; i++)
-      no_dice.push(this.state.og_dice);
-    this.state.no_dice = no_dice;
+    // var no_dice = []
+    // for (var i = 0; i < this.state.no_players; i++)
+    //   no_dice.push(this.state.og_dice);
+    // this.state.no_dice = no_dice;
 
-    var no_players = this.state.no_players;
-    var config = []
-    for (var i = 0; i < no_players; i++) {
-      var player_config = [];
-      for (var j = 0; j < this.state.no_dice[i]; j++)
-        player_config.push(1 + Math.floor(Math.random() * 6));
-      config.push(player_config);
-    }
+    // var no_players = this.state.no_players;
+    // var config = []
+    // for (var i = 0; i < no_players; i++) {
+    //   var player_config = [];
+    //   for (var j = 0; j < this.state.no_dice[i]; j++)
+    //     player_config.push(1 + Math.floor(Math.random() * 6));
+    //   config.push(player_config);
+    // }
 
-    this.state.config = config;
+    // this.state.config = config;
   }
 
   AssignDice() {

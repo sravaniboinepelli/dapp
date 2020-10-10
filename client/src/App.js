@@ -13,8 +13,8 @@ class App extends React.Component {
     super(props);
 
     this.state = {
-      no_players: 5,
-      og_dice: 5,
+      no_players: 0,
+      og_dice: 0,
       no_dice: [],
       config: [],
       curr: 0,
@@ -22,8 +22,7 @@ class App extends React.Component {
       diceNum: 0,
       topMessage: "Liar's Dice Game",
       moves: [],
-      isSubmitted: 1,
-      drizzleState: this.props.drizzleState,
+      isSubmitted: 0,
       loading: true,
       drizzleState: null,
     };
@@ -34,20 +33,20 @@ class App extends React.Component {
     this.handleSubmit = this.handleSubmit.bind(this);
     var no_dice = []
 
-    for (var i = 0; i < this.state.no_players; i++)
-      no_dice.push(this.state.og_dice);
-    this.state.no_dice = no_dice;
+    // for (var i = 0; i < this.state.no_players; i++)
+    //   no_dice.push(this.state.og_dice);
+    // this.state.no_dice = no_dice;
 
-    var no_players = this.state.no_players;
-    var config = []
-    for (var i = 0; i < no_players; i++) {
-      var player_config = [];
-      for (var j = 0; j < this.state.no_dice[i]; j++)
-        player_config.push(1 + Math.floor(Math.random() * 6));
-      config.push(player_config);
-    }
+    // var no_players = this.state.no_players;
+    // var config = []
+    // for (var i = 0; i < no_players; i++) {
+    //   var player_config = [];
+    //   for (var j = 0; j < this.state.no_dice[i]; j++)
+    //     player_config.push(1 + Math.floor(Math.random() * 6));
+    //   config.push(player_config);
+    // }
 
-    this.state.config = config;
+    // this.state.config = config;
   }
 
   componentDidMount() {
@@ -184,12 +183,13 @@ class App extends React.Component {
       alert("Choose appropriate value");
       return;
     }
-    this.setPDNo(this.state.no_players, this.state.og_dice, this.props.drizzle, this.props.drizzleState)
+    this.setPDNo(this.state.no_players, this.state.og_dice, this.props.drizzle, this.state.drizzleState)
     this.setState({
       isSubmitted: 1
     }, () => {
       this.AssignDice();
       console.log(this.state.isSubmitted);
+      console.log("WOOHOO!");
     })
   }
 
@@ -203,88 +203,84 @@ class App extends React.Component {
     //if(this.numPlayersPaid != this.state.no_players && this.state.no_players != 0 ) return "Waiting for all players to pay...."
     return (
       <div className="App">
-      <div className="page">
-        <h1>{this.state.topMessage}</h1>
-        { (!this.state.isSubmitted) ?
-          <div>
-            <div class="middle">
-              <select class="form-control" name="no_players" value={this.state.value} onChange={this.handleForm}>
-                <option selected disabled>Number of Players</option>
+        <div className="page">
+          <h1>{this.state.topMessage}</h1>
+          {(!this.state.isSubmitted) ?
+            <div>
+              <div class="middle">
+                <select class="form-control" name="no_players" value={this.state.value} onChange={this.handleForm}>
+                  <option selected disabled>Number of Players</option>
 
-                {
-                  info.map((val, ind) => {
-                    return <option value={val}>{val}</option>
-                  })
-                }
-              </select>
-              <br />
+                  {
+                    info.map((val, ind) => {
+                      return <option value={val}>{val}</option>
+                    })
+                  }
+                </select>
+                <br />
 
-              <select class="form-control" title="Number" name="og_dice" value={this.state.value} onChange={this.handleForm}>
-                <option selected disabled>Number of Dice</option>
-                {
-                  info.map((val, ind) => {
-                    return <option value={val}>{val}</option>
-                  })
-                }
-              </select>
-              <br />
+                <select class="form-control" title="Number" name="og_dice" value={this.state.value} onChange={this.handleForm}>
+                  <option selected disabled>Number of Dice</option>
+                  {
+                    info.map((val, ind) => {
+                      return <option value={val}>{val}</option>
+                    })
+                  }
+                </select>
+                <br />
 
-              <button type="submit" class="btn btn-primary mb-2" onClick={this.handleSubmit}>Submit</button>
+                <button type="submit" class="btn btn-primary mb-2" onClick={this.handleSubmit}>Submit</button>
+              </div>
             </div>
-          </div>
-          :
-          <div>
-            <table className="center mt-3">
-              <tbody>
-                {this.state.config.map((row, index) => (
-                  <tr>
+            :
+            <div>
+              <table className="center mt-3">
+                <tbody>
+                  {this.state.config.map((row, index) => (
+                    <tr>
 
-                    {row.map((col, ind) => { return index === this.state.curr || this.state.curr === -1 ? <td><FontAwesomeIcon className="mr-2 mb-2 ml-2" icon={mapping[col]} size="4x"></FontAwesomeIcon></td> : <td><FontAwesomeIcon icon={faSquare} size="4x" className="mr-2 mb-2 ml-2"></FontAwesomeIcon></td> }
-                    )}
-                  </tr>
+                      {row.map((col, ind) => { return index === this.state.curr || this.state.curr === -1 ? <td><FontAwesomeIcon className="mr-2 mb-2 ml-2" icon={mapping[col]} size="4x"></FontAwesomeIcon></td> : <td><FontAwesomeIcon icon={faSquare} size="4x" className="mr-2 mb-2 ml-2"></FontAwesomeIcon></td> }
+                      )}
+                    </tr>
 
-                ))}
-              </tbody>
-            </table>
+                  ))}
+                </tbody>
+              </table>
 
-            <Button variant="danger" className="mt-4 mr-4" onClick={this.Challenge}>Challenge</Button>
-            <Dropdown as={ButtonGroup} className="mr-4 mt-4" onSelect={this.HandleNumber}>
-              <Dropdown.Toggle variant="info" id="dropdown-custom-1">Dice Number</Dropdown.Toggle>
-              <Dropdown.Menu>
+              <Button variant="danger" className="mt-4 mr-4" onClick={this.Challenge}>Challenge</Button>
+              <Dropdown as={ButtonGroup} className="mr-4 mt-4" onSelect={this.HandleNumber}>
+                <Dropdown.Toggle variant="info" id="dropdown-custom-1">Dice Number</Dropdown.Toggle>
+                <Dropdown.Menu>
+                  {
+                    info.map((val, ind) => {
+                      return <Dropdown.Item eventKey={val}>{val}</Dropdown.Item>
+                    })
+                  }
+                </Dropdown.Menu>
+              </Dropdown>{' '}
+              <Dropdown as={ButtonGroup} onSelect={this.HandleValue}>
+                <Dropdown.Toggle variant="info" id="dropdown-custom-1" className="mt-4 mr-4">Dice Value</Dropdown.Toggle>
+                <Dropdown.Menu>
+                  {
+                    info.map((val, ind) => {
+                      return <Dropdown.Item eventKey={val}>{val}</Dropdown.Item>
+                    })
+                  }
+                </Dropdown.Menu>
+
+              </Dropdown>
+
+              <Button className="mt-4 mr-4" onClick={this.RaiseBet}>Raise Bet</Button>
+              <div className="mt-4">
+                {this.state.moves.length > 0 && <h3>Game log</h3>}
+
                 {
-                  info.map((val, ind) => {
-                    return <Dropdown.Item eventKey={val}>{val}</Dropdown.Item>
-                  })
+                  this.state.moves.reverse().map((move, ind) => { return move[0] === 0 ? <p>Player {move[1]} challenged player {move[2]}</p> : <p>Player {move[1]} raised {move[2]} dices of value {move[3]}</p> })
                 }
-              </Dropdown.Menu>
-            </Dropdown>{' '}
-            <Dropdown as={ButtonGroup} onSelect={this.HandleValue}>
-              <Dropdown.Toggle variant="info" id="dropdown-custom-1" className="mt-4 mr-4">Dice Value</Dropdown.Toggle>
-              <Dropdown.Menu>
-                {
-                  info.map((val, ind) => {
-                    return <Dropdown.Item eventKey={val}>{val}</Dropdown.Item>
-                  })
-                }
-              </Dropdown.Menu>
-
-            </Dropdown>
-
-            <Button className="mt-4 mr-4" onClick={this.RaiseBet}>Raise Bet</Button>
-            <div className="mt-4">
-              {this.state.moves.length > 0 && <h3>Game log</h3>}
-
-              {
-                this.state.moves.reverse().map((move, ind) => { console.log(move); return move[0] === 0 ? <p>Player {move[1]} challenged player {move[2]}</p> : <p>Player {move[1]} raised {move[2]} dices of value {move[3]}</p> })
-              }
+              </div>
             </div>
-          </div>
-        }
-        <SetString
-          drizzle={this.props.drizzle}
-          drizzleState={this.state.drizzleState}
-        />
-      </div>
+          }
+        </div>
       </div>
 
     );
