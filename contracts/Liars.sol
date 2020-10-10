@@ -140,8 +140,11 @@ contract Liars {
         
         return turnOfPlayer;
     }
+    function random() private view returns(uint){
+        return uint(keccak256(abi.encodePacked(block.difficulty, block.timestamp)));
+    }
+
     function Challenge() public {
-        uint8 currplayerpos = players[msg.sender].playerPos;
         address challengedplayer = playerList[currentBid.playerPos];
         uint8 j = 0;
         uint16 facecount = 0;
@@ -154,10 +157,18 @@ contract Liars {
             }
         }
         if(facecount >= currentBid.numDice){
-            //ChallengerWins(msg.sender);
+            players[msg.sender].prevNumDice = players[msg.sender].numDice;
+            players[msg.sender].numDice -= 1; 
+            if(players[msg.sender].numDice == 0){
+                players[msg.sender].inGame = false;
+            }
         }
         else{
-            //ChallengerLoses(msg.sender);
+            players[challengedplayer].prevNumDice = players[challengedplayer].numDice;
+            players[challengedplayer].numDice -= 1; 
+            if(players[challengedplayer].numDice == 0){
+                players[challengedplayer].inGame = false;
+            }
         }
 
     }
@@ -166,6 +177,7 @@ contract Liars {
         currentBid.faceValue = faceValue;
         currentBid.playerPos = players[msg.sender].playerPos;
     }
+
     function DiceShuffle() public {
         uint8 j = 0;
         for( j = 0; j<playerList.length;j++){
@@ -175,10 +187,14 @@ contract Liars {
                     players[playerList[j]].RollFaces[i] = 255 ;
                 }
                 else{
-                    players[playerList[j]].RollFaces[i] = 2; //Random Generator
+                    players[playerList[j]].RollFaces[i] = (random()%6)+1; //Random Generator
                 }
             }
         }
+    }
+    
+    function getRolledDice() public view returns(uint256 [] memory) {
+        return players[msg.sender].RollFaces;
     }
 
     function initialpay() public payable {
@@ -197,7 +213,6 @@ contract Liars {
         info.playerPos = (uint8)(playerList.length) -1;
         numActivePlayers +=1;
 
-        
         if(msg.value > gameCost) {
             info.balance = msg.value - gameCost;
         }
