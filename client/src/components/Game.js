@@ -9,8 +9,8 @@ export default class Gaming extends Component {
     super(props);
 
     this.state = {
-      no_players: 0,
-      og_dice: 0,
+      no_players: 5,
+      og_dice: 5,
       no_dice: [],
       config: [],
       curr: 0,
@@ -18,7 +18,7 @@ export default class Gaming extends Component {
       diceNum: 0,
       topMessage: "Liar's Dice Game",
       moves: [],
-      isSubmitted: 0
+      isSubmitted: 1
     };
     const { drizzle, drizzleState } = this.props;
     this.AssignDice = this.AssignDice.bind(this);
@@ -31,8 +31,21 @@ export default class Gaming extends Component {
     this.HandleDice = this.HandleDice.bind(this);
     this.setPDNo = this.setPDNo.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
-    this.AssignDice();
-    this.ShuffleDice();
+    var no_dice = []
+    for (var i = 0; i < this.state.no_players; i++)
+      no_dice.push(this.state.og_dice);
+    this.state.no_dice = no_dice;
+
+    var no_players = this.state.no_players;
+    var config = []
+    for (var i = 0; i < no_players; i++) {
+      var player_config = [];
+      for (var j = 0; j < this.state.no_dice[i]; j++)
+        player_config.push(1 + Math.floor(Math.random() * 6));
+      config.push(player_config);
+    }
+
+    this.state.config = config;
   }
 
   AssignDice() {
