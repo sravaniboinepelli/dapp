@@ -124,7 +124,7 @@ export default class Gaming extends Component {
     //this.setState({ stackId });
   };
 
-
+  //The same format is to be used for getters. Replace numActivePlayers with the getter name
   readPlayer = (drizzle, drizzleState) => {
     const contract = drizzle.contracts.Liars;
 
