@@ -43,6 +43,18 @@ var player5 = accounts[7];
 
 inst1 = await LiarsDice.deployed();
 
+let accounts = await web3.eth.getAccounts()
+
+
+inst1 = await Liars.deployed();
+inst1.initialpay({from:player1,value:1});
+inst1.initialpay({from:player2,value:1});
+inst1.DiceShuffle({from:player1});
+inst1.getRolledDice({from:player1})
+inst1.getRolledDice({from:player2})
+
+
+
 
 inst1.joinGame({from:player1,value:0x11});
 inst1.joinGame({from:player2,value:0x11});

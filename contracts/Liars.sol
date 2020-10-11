@@ -92,6 +92,12 @@ contract Liars {
         uint256 _newFaceValue
     );
 
+      event InitialPay(
+        address sender,
+        uint8 info1,
+        bool exist 
+    );
+
    
     /// @notice Constructor initialize default values
     constructor ()   {
@@ -105,6 +111,9 @@ contract Liars {
         currentBid.faceValue = 0;
         currentBid.numDice = 0;
         winnerPlayerPos = 255;
+
+        numPlayers = 2;
+        numSetDice = 2;
 
     }
 
@@ -194,7 +203,13 @@ contract Liars {
     }
     
     function getRolledDice() public view returns(uint256 [] memory) {
-        return players[msg.sender].RollFaces;
+        PlayerInfo storage info = players[msg.sender];
+        return info.RollFaces;
+    }
+
+    function getRolledDice2() public view  returns(uint256) {
+        PlayerInfo storage info = players[msg.sender];
+        return info.RollFaces[0];
     }
 
     function initialpay() public payable {
@@ -219,6 +234,7 @@ contract Liars {
         if(playerList.length == numPlayers){
             stage = Stages.roll;
         }
+        emit InitialPay(msg.sender, info.numDice, info.exists);
     }
     /// @notice  Fallback function to receive any transfers
     receive() external payable {     

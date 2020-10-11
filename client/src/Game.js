@@ -39,17 +39,18 @@ export default class Game extends React.Component {
     }
 
     async componentDidMount(){
-      const web3 = new Web3(window.web3.currentProvider)
+      // const web3 = new Web3(window.web3.currentProvider)
+      const web3 = new Web3("http://localhost:7545")
+
       web3.eth.getBlock('latest').then(console.log)
-      const accountsl =  web3.eth.getAccounts(); 
+      const accountsl = await  web3.eth.getAccounts(); 
       console.log("accounts1", accountsl)
         const { drizzle } = this.props;
         const contract = drizzle.contracts.Liars;
         const _numActiveKey = contract.methods["numActivePlayers"].cacheCall();
-        const _getDiceKey = contract.methods["getRolledDice"].cacheCall();
-
+        
         this.setState({ numActiveKey:_numActiveKey,
-        getDiceKey:_getDiceKey });
+          });
         this.setState({accounts: accountsl});
 
     }
@@ -70,23 +71,51 @@ export default class Game extends React.Component {
       getDice = () => {
         // save the `dataKey` to local component state for later reference
         const { Liars } = this.props.drizzleState.contracts;
-        const getRolledDice = Liars.getRolledDice[this.state.getDiceKey].value;
+        const contract = this.props.drizzle.contracts.Liars;
+        var getRolledDice = [1,2,3];
         var newconfig = []
-        for(var j = 0; j<this.state.config.length;j++){
-          var row = []
-          for(var k = 0; k<this.state.config[j].length;k++)
-          {
-            row.push(this.state.config[j][k]);
+        // for(var j = 0; j<this.state.config.length;j++){
+        //   var row = []
+        //   for(var k = 0; k<this.state.config[j].length;k++)
+        //   {
+        //     row.push(this.state.config[j][k]);
+        //   }
+        //   newconfig.push(row);
+        // }
+        if (this.state.getDiceKey == null){
+            var diceKeyLIst = [];
+            for (var i =0; i< this.state.no_players; i++){
+              var _getDiceKey = contract.methods["getRolledDice"].cacheCall({from:this.state.accounts[i]});
+              console.log("_getDiceKey:", _getDiceKey);
+              diceKeyLIst.push(_getDiceKey);
+            }
+            this.setState({getDiceKey:diceKeyLIst });
+        }else {
+          console.log("non null dicekey", this.state.getDiceKey[0] )
+          for (var j =0; j< this.state.no_players; j++){
+              getRolledDice = Liars.getRolledDice[this.state.getDiceKey[j]].value;
+              console.log("getRolledDice", getRolledDice);
+              var player_config = [];
+              for(var i = 0; i<getRolledDice.length;i++){
+                if(getRolledDice[i]!=0){
+                    player_config.push(getRolledDice[i]);
+                    console.log("123",getRolledDice[i] );
+                }
+              }
+              newconfig.push(player_config);
+
           }
-          newconfig.push(row);
         }
-        for(var i = 0; i<getRolledDice.length;i++)
-        {
-          if(getRolledDice[i]!=0){
-              newconfig = getRolledDice[this.state.curr][i];
-          }
+      
+        console.log(getRolledDice[0]);
+        console.log(newconfig);
+        if(newconfig != null) {
+          this.setState({
+            config: newconfig
+          })
+
         }
-        console.log(getRolledDice.value);
+        
       }
 
       diceshuffle = () => {
@@ -99,18 +128,18 @@ export default class Game extends React.Component {
       }
 
       ShuffleDice() {
-        var no_players = this.state.no_players;
-        var config = []
-        for (var i = 0; i < no_players; i++) {
-          var player_config = [];
-          for (var j = 0; j < this.state.no_dice[i]; j++)
-            player_config.push(1 + Math.floor(Math.random() * 6));
-          config.push(player_config);
-        }
+        // var no_players = this.state.no_players;
+        // var config = []
+        // for (var i = 0; i < no_players; i++) {
+        //   var player_config = [];
+        //   for (var j = 0; j < this.state.no_dice[i]; j++)
+        //     player_config.push(1 + Math.floor(Math.random() * 6));
+        //   config.push(player_config);
+        // }
     
-        this.setState({
-          config: config
-        })
+        // this.setState({
+        //   config: config
+        // })
     
       }
     
@@ -168,14 +197,14 @@ export default class Game extends React.Component {
         const contract = drizzle.contracts.Liars;
         //let drizzle know we want to call the `set` method with `value`
         const stackIdSetPD = contract.methods["setPD"].cacheSend(no_players, og_dice, {
-          from: drizzleState.accounts[0]
+          from: this.state.accounts[0]
         });
 
         var i =0;
-        console.log("account", drizzleState.accounts[i], drizzleState.accounts[0])
         for (var i=0; i< no_players; i++){
+          console.log("accounti", this.state.accounts[i])
             contract.methods["initialpay"].cacheSend( {
-            from: drizzleState.accounts[i],
+            from: this.state.accounts[i],
             value: 0x2,
           });
 
@@ -232,10 +261,10 @@ export default class Game extends React.Component {
           return;
         }
         this.setPDNo(this.state.no_players, this.state.og_dice, this.props.drizzle, this.props.drizzleState);
-        this.setState({submitCount: this.state.submitCount++})
-        if (this.state.submitCount == 1){
-          this.state.numPlayersPaid = 2;
-        }
+        // this.setState({submitCount: this.state.submitCount++})
+        // if (this.state.submitCount == 1){
+        //   this.state.numPlayersPaid = 2;
+        // }
 
         this.readPlayer(this.props.drizzle,this.props.drizzleState);
         console.log(this.state.numPlayersPaid);
@@ -294,6 +323,11 @@ export default class Game extends React.Component {
                           {row.map((col, ind) => { return index === this.state.curr || this.state.curr === -1 ? <td><FontAwesomeIcon className="mr-2 mb-2 ml-2" icon={mapping[col]} size="4x"></FontAwesomeIcon></td> : <td><FontAwesomeIcon icon={faSquare} size="4x" className="mr-2 mb-2 ml-2"></FontAwesomeIcon></td> }
                           )}
                         </tr>
+                        //   <tr>
+    
+                        //   {row.map((col, ind) => { return index > -2 ? <td><FontAwesomeIcon className="mr-2 mb-2 ml-2" icon={mapping[col]} size="4x"></FontAwesomeIcon></td> : <td><FontAwesomeIcon icon={faSquare} size="4x" className="mr-2 mb-2 ml-2"></FontAwesomeIcon></td> }
+                        //   )}
+                        // </tr>
     
                       ))}
                     </tbody>
