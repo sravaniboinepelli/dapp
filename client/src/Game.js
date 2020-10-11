@@ -1,4 +1,5 @@
 import './App.css';
+import Web3 from "web3"
 import React, { Component } from "react";
 import { Button, DropdownButton, Dropdown, ButtonGroup, Form } from "react-bootstrap";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -10,6 +11,7 @@ export default class Game extends React.Component {
       super(props);
   
       this.state = {
+        stackId: null,
         no_players: 0,
         og_dice: 0,
         no_dice: [],
@@ -23,16 +25,24 @@ export default class Game extends React.Component {
         numActiveKey:null,
         getDiceKey:null,
         numPlayersPaid:0,
-        shuffleDice:null
+        shuffleDice:null,
+        submitCount: 0,
+        accounts:[]
       };
       this.AssignDice = this.AssignDice.bind(this);
       this.ShuffleDice = this.ShuffleDice.bind(this);
       this.Challenge = this.Challenge.bind(this);
       this.RaiseBet = this.RaiseBet.bind(this);
       this.handleSubmit = this.handleSubmit.bind(this);
+      
       var no_dice = []
     }
+
     async componentDidMount(){
+      const web3 = new Web3(window.web3.currentProvider)
+      web3.eth.getBlock('latest').then(console.log)
+      const accountsl =  web3.eth.getAccounts(); 
+      console.log("accounts1", accountsl)
         const { drizzle } = this.props;
         const contract = drizzle.contracts.Liars;
         const _numActiveKey = contract.methods["numActivePlayers"].cacheCall();
@@ -40,6 +50,7 @@ export default class Game extends React.Component {
 
         this.setState({ numActiveKey:_numActiveKey,
         getDiceKey:_getDiceKey });
+        this.setState({accounts: accountsl});
 
     }
     AssignDice() {
@@ -81,6 +92,7 @@ export default class Game extends React.Component {
       diceshuffle = () => {
         const contract = this.props.drizzle.contracts.Liars;
         //let drizzle know we want to call the `set` method with `value`
+        console.log("account", this.props.drizzleState.accounts[0] )
         const stackId = contract.methods["DiceShuffle"].cacheSend({
           from: this.props.drizzleState.accounts[0]
         });
@@ -155,12 +167,23 @@ export default class Game extends React.Component {
       setPDNo = (no_players, og_dice, drizzle, drizzleState) => {
         const contract = drizzle.contracts.Liars;
         //let drizzle know we want to call the `set` method with `value`
-        const stackId = contract.methods["setPD"].cacheSend(no_players, og_dice, {
+        const stackIdSetPD = contract.methods["setPD"].cacheSend(no_players, og_dice, {
           from: drizzleState.accounts[0]
         });
+
+        var i =0;
+        console.log("account", drizzleState.accounts[i], drizzleState.accounts[0])
+        for (var i=0; i< no_players; i++){
+            contract.methods["initialpay"].cacheSend( {
+            from: drizzleState.accounts[i],
+            value: 0x2,
+          });
+
+        }
     
         //save the `stackId` for later reference
-        //this.setState({ stackId });
+        // this.setState({ stackIdSetPD });
+
       };
     
       //The same format is to be used for getters. Replace numActivePlayers with the getter name
@@ -187,6 +210,8 @@ export default class Game extends React.Component {
           from: this.props.drizzleState.accounts[0]
         });
       }
+      
+
 
       HandleDice = (e) => {
         this.setState({
@@ -207,6 +232,11 @@ export default class Game extends React.Component {
           return;
         }
         this.setPDNo(this.state.no_players, this.state.og_dice, this.props.drizzle, this.props.drizzleState);
+        this.setState({submitCount: this.state.submitCount++})
+        if (this.state.submitCount == 1){
+          this.state.numPlayersPaid = 2;
+        }
+
         this.readPlayer(this.props.drizzle,this.props.drizzleState);
         console.log(this.state.numPlayersPaid);
         if(this.state.no_players!=0&&this.state.numPlayersPaid!=0&&this.state.no_players==this.state.numPlayersPaid){
@@ -308,4 +338,18 @@ export default class Game extends React.Component {
     
         );
       }
+      getTxStatus = () => {
+        // get the transaction states from the drizzle state
+        const { transactions, transactionStack } = this.props.drizzleState;
+
+        // get the transaction hash using our saved `stackId`
+        const txHash = transactionStack[this.state.stackId];
+
+        // if transaction hash does not exist, don't display anything
+        if (!txHash) return null;
+
+        // otherwise, return the transaction status
+        return `Transaction status: ${transactions[txHash] && transactions[txHash].status}`;
+    };
+
     }
