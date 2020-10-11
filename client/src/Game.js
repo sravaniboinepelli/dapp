@@ -44,7 +44,6 @@ export default class Game extends React.Component {
     }
     AssignDice() {
         this.diceshuffle();
-        this.getDice();
         var no_dice = []
         var og_dice = this.state.og_dice;
         for (var i = 0; i < this.state.no_players; i++)
@@ -60,8 +59,23 @@ export default class Game extends React.Component {
       getDice = () => {
         // save the `dataKey` to local component state for later reference
         const { Liars } = this.props.drizzleState.contracts;
-        const getRolledDice = Liars.getRolledDice[this.state.getDiceKey];
-        console.log("LOLOLOL",getRolledDice);
+        const getRolledDice = Liars.getRolledDice[this.state.getDiceKey].value;
+        var newconfig = []
+        for(var j = 0; j<this.state.config.length;j++){
+          var row = []
+          for(var k = 0; k<this.state.config[j].length;k++)
+          {
+            row.push(this.state.config[j][k]);
+          }
+          newconfig.push(row);
+        }
+        for(var i = 0; i<getRolledDice.length;i++)
+        {
+          if(getRolledDice[i]!=0){
+              newconfig = getRolledDice[this.state.curr][i];
+          }
+        }
+        console.log(getRolledDice.value);
       }
 
       diceshuffle = () => {
@@ -179,7 +193,7 @@ export default class Game extends React.Component {
           og_dice: parseInt(e)
         })
       }
-    
+
       handleForm = (event) => {
         let nam = event.target.name;
         let val = event.target.value;
@@ -256,6 +270,7 @@ export default class Game extends React.Component {
                   </table>
     
                   <Button variant="danger" className="mt-4 mr-4" onClick={this.Challenge}>Challenge</Button>
+                  <Button className="mt-4 mr-4" onClick={this.getDice}>GetDiceFaces</Button>
                   <Dropdown as={ButtonGroup} className="mr-4 mt-4" onSelect={this.HandleNumber}>
                     <Dropdown.Toggle variant="info" id="dropdown-custom-1">Dice Number</Dropdown.Toggle>
                     <Dropdown.Menu>
