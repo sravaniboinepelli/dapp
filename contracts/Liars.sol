@@ -206,6 +206,21 @@ contract Liars {
         PlayerInfo storage info = players[msg.sender];
         return info.RollFaces;
     }
+    function getAllRolledDice() public view returns(uint8, uint256 [6][] memory) {
+        uint8 noPlayers = 0;
+        uint256 [6][] memory playerRolledDice = new uint256[6][](numSetDice);
+        for (uint8 i=0;  i< playerList.length; i++ ){
+            if (playerList[i] != address(0)){
+                for(uint8 j=0; j < players[playerList[i]].RollFaces.length; j++){
+                  playerRolledDice[noPlayers][j]= players[playerList[i]].RollFaces[j];
+                  playerRolledDice[noPlayers][j]= players[playerList[i]].RollFaces[j];
+
+                }
+                noPlayers++;
+            }
+        }
+        return (noPlayers, playerRolledDice);
+    }
 
     function getRolledDice2() public view  returns(uint256) {
         PlayerInfo storage info = players[msg.sender];

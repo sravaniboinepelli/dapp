@@ -48,9 +48,10 @@ export default class Game extends React.Component {
         const { drizzle } = this.props;
         const contract = drizzle.contracts.Liars;
         const _numActiveKey = contract.methods["numActivePlayers"].cacheCall();
+        const _getDiceKey = contract.methods["getAllRolledDice"].cacheCall();
         
         this.setState({ numActiveKey:_numActiveKey,
-          });
+                        getDiceKey: _getDiceKey});
         this.setState({accounts: accountsl});
 
     }
@@ -73,41 +74,25 @@ export default class Game extends React.Component {
         const { Liars } = this.props.drizzleState.contracts;
         const contract = this.props.drizzle.contracts.Liars;
         var getRolledDice = [1,2,3];
-        var newconfig = []
-        // for(var j = 0; j<this.state.config.length;j++){
-        //   var row = []
-        //   for(var k = 0; k<this.state.config[j].length;k++)
-        //   {
-        //     row.push(this.state.config[j][k]);
-        //   }
-        //   newconfig.push(row);
-        // }
+        var newconfig = [];
         if (this.state.getDiceKey == null){
-            var diceKeyLIst = [];
-            for (var i =0; i< this.state.no_players; i++){
-              var _getDiceKey = contract.methods["getRolledDice"].cacheCall({from:this.state.accounts[i]});
-              console.log("_getDiceKey:", _getDiceKey);
-              diceKeyLIst.push(_getDiceKey);
-            }
-            this.setState({getDiceKey:diceKeyLIst });
+          var _getDiceKey = contract.methods["getRolledDice"].cacheCall();
+          this.setState({getDiceKey:_getDiceKey });
         }else {
-          console.log("non null dicekey", this.state.getDiceKey[0] )
-          for (var j =0; j< this.state.no_players; j++){
-              getRolledDice = Liars.getRolledDice[this.state.getDiceKey[j]].value;
-              console.log("getRolledDice", getRolledDice);
-              var player_config = [];
-              for(var i = 0; i<getRolledDice.length;i++){
-                if(getRolledDice[i]!=0){
-                    player_config.push(getRolledDice[i]);
-                    console.log("123",getRolledDice[i] );
+          console.log("non null dicekey", this.state.getDiceKey)    
+          getRolledDice = Liars.getAllRolledDice[this.state.getDiceKey].value;
+          console.log("getDice", getRolledDice);
+          for(var i =0; i<getRolledDice[0]; i++){
+            var player_config = [];
+            for (var j=0; j<getRolledDice[1][i].length; j++ ){
+                if(getRolledDice[1][i][j] != 0){
+                   player_config.push(getRolledDice[1][i][j]);
                 }
-              }
-              newconfig.push(player_config);
-
+            }
+            newconfig.push(player_config);
           }
+          
         }
-      
-        console.log(getRolledDice[0]);
         console.log(newconfig);
         if(newconfig != null) {
           this.setState({
@@ -121,10 +106,11 @@ export default class Game extends React.Component {
       diceshuffle = () => {
         const contract = this.props.drizzle.contracts.Liars;
         //let drizzle know we want to call the `set` method with `value`
-        console.log("account", this.props.drizzleState.accounts[0] )
-        const stackId = contract.methods["DiceShuffle"].cacheSend({
-          from: this.props.drizzleState.accounts[0]
-        });
+        console.log("account dice Shuffle", this.props.drizzleState.accounts[0] )
+        // const stackId = contract.methods["DiceShuffle"].cacheSend({
+        //   from: this.props.drizzleState.accounts[0]
+        // });
+        const stackId = contract.methods["DiceShuffle"].cacheSend();
       }
 
       ShuffleDice() {
@@ -196,19 +182,17 @@ export default class Game extends React.Component {
       setPDNo = (no_players, og_dice, drizzle, drizzleState) => {
         const contract = drizzle.contracts.Liars;
         //let drizzle know we want to call the `set` method with `value`
+        console.log("setPd",this.props.drizzleState.accounts[0] )
         const stackIdSetPD = contract.methods["setPD"].cacheSend(no_players, og_dice, {
-          from: this.state.accounts[0]
+          from: this.props.drizzleState.accounts[0]
         });
-
-        var i =0;
-        for (var i=0; i< no_players; i++){
-          console.log("accounti", this.state.accounts[i])
-            contract.methods["initialpay"].cacheSend( {
-            from: this.state.accounts[i],
-            value: 0x2,
-          });
-
-        }
+        console.log("initialpay:", this.props.drizzleState.accounts[0]);
+        contract.methods["initialpay"].cacheSend( {
+          from: this.props.drizzleState.accounts[0],
+          value: 0x2,
+        });
+        // I think we need to do it here.
+        // this.diceshuffle();
     
         //save the `stackId` for later reference
         // this.setState({ stackIdSetPD });
@@ -221,9 +205,9 @@ export default class Game extends React.Component {
         const { Liars } = this.props.drizzleState.contracts;
         console.log(Liars);
         const numPlayersPaid = Liars.numActivePlayers[this.state.numActiveKey];
-        console.log("LOLLL",numPlayersPaid.value);
-        this.state.numPlayersPaid = numPlayersPaid.value
-        ;
+        console.log("numPlayersPaid LOLLL",numPlayersPaid.value);
+        this.setState({numPlayersPaid: numPlayersPaid.value});
+      
       }
       
       setChallenge = () => {
@@ -261,10 +245,6 @@ export default class Game extends React.Component {
           return;
         }
         this.setPDNo(this.state.no_players, this.state.og_dice, this.props.drizzle, this.props.drizzleState);
-        // this.setState({submitCount: this.state.submitCount++})
-        // if (this.state.submitCount == 1){
-        //   this.state.numPlayersPaid = 2;
-        // }
 
         this.readPlayer(this.props.drizzle,this.props.drizzleState);
         console.log(this.state.numPlayersPaid);
@@ -289,7 +269,7 @@ export default class Game extends React.Component {
               {((!this.state.isSubmitted)) ?
                 <div>
                   <div class="middle">
-                    <select class="form-control" name="no_players" value={this.state.value} onChange={this.handleForm}>
+                    <select className="form-control" name="no_players" value={this.state.value} onChange={this.handleForm}>
                       <option selected disabled>Number of Players</option>
     
                       {
@@ -300,7 +280,7 @@ export default class Game extends React.Component {
                     </select>
                     <br />
     
-                    <select class="form-control" title="Number" name="og_dice" value={this.state.value} onChange={this.handleForm}>
+                    <select className="form-control" title="Number" name="og_dice" value={this.state.value} onChange={this.handleForm}>
                       <option selected disabled>Number of Dice</option>
                       {
                         info.map((val, ind) => {
