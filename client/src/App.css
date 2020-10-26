@@ -61,12 +61,24 @@
 .landingBody {
   margin: auto;
   align-items: center;
-  background-image: url('assets/home.jpg');
+  background-image: url('img/home.jpg');
   /* position: fixed; */
-  height: 94.1vh;
+  height: 94.3vh;
   background-size: cover;
   background-position: center;
   display: flex;
+}
+
+.white-text{
+  color: white;
+}
+
+.or-text{
+  color: rgb(115, 188, 236) !important;
+}
+
+.red-text{
+  color: rgba(99, 87, 200, 0.863) !important;
 }
 .heading {
   color: #ffffff;
