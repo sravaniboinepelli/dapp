@@ -1,41 +1,22 @@
+import React from 'react';
 import './App.css';
-import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
-import "bootstrap/dist/css/bootstrap.min.css";
-import Landing from "./components/Landing";
-import React, { Component } from "react";
-import { Button, DropdownButton, Dropdown, ButtonGroup, Form } from "react-bootstrap";
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faSquare, faDiceOne, faDiceThree, faDiceTwo, faDiceFour, faDiceFive, faDiceSix } from '@fortawesome/free-solid-svg-icons'
-import SetString from './components/SetString'
-import Game from './Game'
+import ReadString from "./ReadString";
+import SetString from "./SetString";
+import Game from './Game';
+import { Navbar, Nav, Button, NavItem } from "react-bootstrap";
+import { Link } from "react-router-dom";
 
 class App extends React.Component {
   constructor(props) {
     super(props);
-
     this.state = {
       loading: true,
       drizzleState: null,
-    };
-
-    // for (var i = 0; i < this.state.no_players; i++)
-    //   no_dice.push(this.state.og_dice);
-    // this.state.no_dice = no_dice;
-
-    // var no_players = this.state.no_players;
-    // var config = []
-    // for (var i = 0; i < no_players; i++) {
-    //   var player_config = [];
-    //   for (var j = 0; j < this.state.no_dice[i]; j++)
-    //     player_config.push(1 + Math.floor(Math.random() * 6));
-    //   config.push(player_config);
-    // }
-
-    // this.state.config = config;
+      showRules: 0,
+      wander: 0,
+    }
   }
-
-componentDidMount() {
-
+  componentDidMount() {
     const { drizzle } = this.props;
     this.unsubscribe = drizzle.store.subscribe(() => {
       const drizzleState = drizzle.store.getState();
@@ -47,22 +28,67 @@ componentDidMount() {
   componentWillUnmount() {
     this.unsubscribe();
   }
-
   render() {
     if (this.state.loading) return "Loading Drizzle...";
-    //console.log(this.state)
     return (
-      
       <div className="App">
-        <Game
-          drizzle={this.props.drizzle}
-          drizzleState={this.state.drizzleState}
-        />
-      </div>
+        <Navbar bg="dark" variant="dark">
+          <div className="container">
+            <Navbar.Brand href="/">Liar's Dice</Navbar.Brand>
+            <Nav className="mr-auto">
+            </Nav>
+            <Nav>
+              <Nav.Link onClick={() => this.setState({ showRules: 1 })}>Rules</Nav.Link>
+              <Nav.Link onClick={() => this.setState({ wander: 1, showRules: 0 })}>Wander</Nav.Link>
+            </Nav>
 
+          </div>
+        </Navbar>
+        {
+
+          this.state.showRules ?
+            <div className="landingBody">
+
+              <div className="content">
+                <h1 className="heading red-text">Queen Anne's Revenge</h1>
+                <h4 className="subheading or-text">
+                  Find out who is bluffing and claim the prize!
+            </h4>
+                <p className="white-text">
+                  <ul>
+                    <li>
+                      A player can choose a dice of any face value and guess its frequency.
+                </li>
+                    <li>
+                      Turns move clockwise, where players can 'raise the bet' or 'challenge'
+                </li>
+                    <li>
+                      An incorrect challenge results in loss of a dice for the person who called the bid
+                </li>
+                    <li>
+                      A correct challenge results in a loss of a dice for the last person
+                </li>
+                  </ul>
+                </p>
+              </div>
+            </div>
+            : [
+              (this.state.wander ?
+                <div class="page">
+                  <h1>Are you lost at sea?</h1>
+                  <img class="error" src={require('./img/404-lost-at-sea.gif')} />
+                  <br />
+                  <Button href="/">Go back to shore</Button>
+                </div> : <Game
+                  drizzle={this.props.drizzle}
+                  drizzleState={this.state.drizzleState}
+                />
+              )]
+        }
+
+      </div>
     );
   }
 }
 
 export default App;
-
