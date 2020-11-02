@@ -7,8 +7,14 @@ contract LiarsDice {
 
     /// @dev number of dice given initially per player
     uint8 public numSetDice = 6;
+
+    /// @dev number of players who have paid so far
     uint8 public numPaid = 0;
+
+    /// @dev dummy value for random number generation
     uint16 ninfi = 0;
+
+    /// @dev various possible stages of the game
     enum Stages
     {
         initial,
@@ -33,13 +39,6 @@ contract LiarsDice {
         address playeradd;
     } 
     finalWinner public winningPlayer;
-
-    /// @dev  exists: used to see if player joined the game status will be true till he withdraws any balance owed to him
-    /// @dev  inGame: used to see if player lost all his dice and out of the game
-    /// @dev  numDice: number of dice player currently posses
-    /// @dev  balance: player account balance in wei
-    /// @dev  concealedRollFaces: player's roll face values in current round for each of his dice as hash(before challenged)
-    /// @dev  revealedRollFaces: player's roll face values in current round for each of his dice(after challenge)
   
     struct PlayerInfo {
          bool exists;
@@ -70,18 +69,26 @@ contract LiarsDice {
     
     uint256[] dummyVal;
 
+    /// @dev stores if the game has ended
     uint8 public isGameEnded = 0;
 
+    /// @dev stores the player number whose turn it is currently
     uint256 public currentturnno = 0;
+
+    /// @dev stores the player address whose turn it is currently
     address public currentturn = address(0);
 
+    /// @dev variable used to return faces
     uint256[] Facesreturn;
+
     /// @dev the amount each player has to pay to play the game.
     uint256  gameCost;
 
     uint8 callCount=0;
     /// @dev Front end app shows this by concatenating with string player (instead of address show as player 1, player 2 etc)
     uint8  winnerPlayerPos;
+
+    /// @dev stores the information about the current bid
     bidInfo public currentBid;
 
     /// @dev players list player at pos 0 will strat the first bid and turns go in clock wise direction.
@@ -128,6 +135,9 @@ contract LiarsDice {
         dummyVal = [0];
     }
 
+    /// @dev function used to set the number of players and number of dice, in addition, shuffles the dice
+    /// @param no_players is the the number of players
+    /// @param no_dice is the number of dice
     function setPD(uint8 no_players, uint8 no_dice) public {
         numPlayers = no_players;
         isSubmitted = true;
@@ -141,6 +151,8 @@ contract LiarsDice {
         numSetDice = no_dice;
     }
 
+    /// @dev function used to update the turn
+    /// @return turnOfPlayer which player has to move
     function updateTurn()  internal returns(uint8) {
         if( numActivePlayers == 1){
             turnOfPlayer = 255;
@@ -169,6 +181,7 @@ contract LiarsDice {
         return turnOfPlayer;
     }
 
+    /// @dev updates the addresses and facevalues of the player whose turn it is currently
     function updatecurrentturn() internal {
         currentturnno += 1;
         Facesreturn = [0];
@@ -179,11 +192,15 @@ contract LiarsDice {
             updatecurrentturn();
         }
     }
+
+    /// @dev generates random number
+    /// @param sender is the address of the player
     function random(address sender) private returns(uint){
         ninfi += 1;
         return uint(keccak256(abi.encodePacked(block.difficulty, block.timestamp,ninfi,sender)));
     }
 
+    /// @dev function that is called when a challenge is made to a player
     function Challenge() public {
         address challengedplayer = currentBid.playeradd;
         uint8 j = 0;
@@ -224,6 +241,9 @@ contract LiarsDice {
         }
 
     }
+    /// @dev function that is called when a bet is made
+    /// @param numDice are the number of Dice that are called in the bet
+    /// @param faceValue is the the value of the face that is called in the bet
     function Bet(uint8 numDice, uint8 faceValue) public {
         currentBid.numDice = numDice;
         currentBid.faceValue = faceValue;
@@ -231,6 +251,7 @@ contract LiarsDice {
         updatecurrentturn();
     }
 
+    /// @dev function that is used to shuffle and randomly generate the dice
     function DiceShuffle() public {
         currentturn = playerList[0];
         currentturnno = 0;
@@ -247,15 +268,20 @@ contract LiarsDice {
             }
         }
     }
+
+    /// @dev function that sets Facesreturn to the appropriate value
     function setRolledDice() public {
         Facesreturn = players[msg.sender].RollFaces;
     }
+
+    /// @dev function that returns either facesreturn or returns a dummy value
     function getRolledDice() public view returns(uint256 [] memory) {
         if (msg.sender == currentturn)
             return Facesreturn;
         else return dummyVal;
     }
 
+    /// @dev initial payment made by the players
     function initialpay() public payable {
         require(players[msg.sender].exists == false, "Already joined the game");
         require(msg.value >= gameCost, "Not enough money sent to join game");
@@ -279,6 +305,7 @@ contract LiarsDice {
         }
     }
 
+    /// @dev function to check for application of game rules
     function applyGameRules() internal {
          address loser;
          uint8 loserPos;
@@ -313,6 +340,8 @@ contract LiarsDice {
          }
          
     }
+
+    /// @dev function that is called when the game has ended
     function endGame() internal {
         uint8 j = 0;
         address payable winner = playerList[0];
